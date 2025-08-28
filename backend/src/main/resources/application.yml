@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: traveloka-clone
+  profiles:
+    default: dev
+
+server:
+  port: 8080
+
+logging:
+  level:
+    org.springframework.security: INFO
+    org.hibernate.SQL: DEBUG

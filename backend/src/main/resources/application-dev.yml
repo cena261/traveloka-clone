@@ -1,0 +1,38 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  datasource:
+    url: jdbc:postgresql://localhost:${POSTGRES_PORT:5440}/${POSTGRES_DB:traveloka}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc.time_zone: UTC
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    schemas: iam, inventory, availability, pricing, booking, payment, review, notify
+
+  data:
+    redis:
+      host: localhost
+      port: ${REDIS_PORT:6379}
+
+security:
+  oauth2:
+    resourceserver:
+      jwt:
+        issuer-uri: http://localhost:${KEYCLOAK_HTTP_PORT:8081}/realms/cena
+
+minio:
+  endpoint: http://localhost:${MINIO_PORT:9000}
+  accessKey: ${MINIO_ROOT_USER:minio}
+  secretKey: ${MINIO_ROOT_PASSWORD:minio123}
+  bucket: images

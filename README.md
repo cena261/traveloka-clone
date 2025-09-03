@@ -49,7 +49,7 @@ Dự án thập cẩm, có gì xài đó. Test tất cả công nghệ đã, đa
 
 ---
 
-## 🧪 Testing (tùy chọn)
+## 🧪 Testing 
 
 - **Frontend**: Vitest/Jest + Testing Library; Playwright E2E.
 - **Backend**: JUnit 5 + Testcontainers (Postgres/Redis/ES).
@@ -57,7 +57,7 @@ Dự án thập cẩm, có gì xài đó. Test tất cả công nghệ đã, đa
 
 ---
 
-## 🗺️ Tính năng chính (mô tả ngắn)
+## 🗺️ Tính năng chính 
 
 - Tìm kiếm & lọc nâng cao (ES + Redis cache).
 - Autocomplete địa điểm (Google Places) + bản đồ trực quan (Mapbox).

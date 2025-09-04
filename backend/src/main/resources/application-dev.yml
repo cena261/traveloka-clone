@@ -7,9 +7,11 @@ spring:
     url: jdbc:postgresql://localhost:${POSTGRES_PORT:5440}/${POSTGRES_DB:traveloka}
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
+
   jpa:
     hibernate:
       ddl-auto: validate
+    open-in-view: false
     properties:
       hibernate:
         format_sql: true
@@ -25,14 +27,20 @@ spring:
       host: localhost
       port: ${REDIS_PORT:6379}
 
-security:
-  oauth2:
-    resourceserver:
-      jwt:
-        issuer-uri: http://localhost:${KEYCLOAK_HTTP_PORT:8081}/realms/cena
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:${KEYCLOAK_HTTP_PORT:8081}/realms/cena
+
+  servlet:
+    multipart:
+      max-file-size: 15MB
+      max-request-size: 60MB
 
 minio:
   endpoint: http://localhost:${MINIO_PORT:9000}
   accessKey: ${MINIO_ROOT_USER:minio}
   secretKey: ${MINIO_ROOT_PASSWORD:minio123}
   bucket: images
+  external-url: http://localhost:9000

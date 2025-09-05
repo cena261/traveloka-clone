@@ -7,7 +7,9 @@ import com.cena.traveloka.inventory.dto.request.PropertyUpdateReq;
 import com.cena.traveloka.inventory.dto.response.PropertyRes;
 import com.cena.traveloka.inventory.service.PropertyService;
 import jakarta.validation.Valid;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,8 +18,9 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/inventory/properties")
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PropertyController {
-    private final PropertyService svc;
+    PropertyService svc;
 
     @PostMapping
     public PropertyRes create(@RequestBody @Valid PropertyCreateReq req) {

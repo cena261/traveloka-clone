@@ -7,7 +7,9 @@ import com.cena.traveloka.inventory.entity.Property;
 import com.cena.traveloka.inventory.entity.PropertyImage;
 import com.cena.traveloka.inventory.repository.PropertyImageRepository;
 import com.cena.traveloka.inventory.repository.PropertyRepository;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,10 +18,11 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PropertyImageService {
-    private final PropertyRepository propertyRepo;
-    private final PropertyImageRepository imageRepo;
-    private final StorageService storage;
+    PropertyRepository propertyRepo;
+    PropertyImageRepository imageRepo;
+    StorageService storage;
 
     @Transactional
     public List<PropertyImageRes> upload(UUID propertyId, List<MultipartFile> files) throws Exception {

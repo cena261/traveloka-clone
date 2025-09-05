@@ -7,7 +7,11 @@ import com.cena.traveloka.inventory.dto.request.AmenityUpdateReq;
 import com.cena.traveloka.inventory.dto.response.AmenityRes;
 import com.cena.traveloka.inventory.entity.Amenity;
 import com.cena.traveloka.inventory.repository.AmenityRepository;
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,8 +20,9 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AmenityService {
-    private final AmenityRepository repo;
+    AmenityRepository repo;
 
     @Transactional
     public AmenityRes create(AmenityCreateReq req) {

@@ -6,7 +6,9 @@ import com.cena.traveloka.inventory.dto.request.PartnerUpdateReq;
 import com.cena.traveloka.inventory.dto.response.PartnerRes;
 import com.cena.traveloka.inventory.service.PartnerService;
 import jakarta.validation.Valid;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,8 +17,9 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/inventory/partners")
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PartnerController {
-    private final PartnerService svc;
+    PartnerService svc;
 
     @PostMapping
     public PartnerRes create(@RequestBody @Valid PartnerCreateReq req) {

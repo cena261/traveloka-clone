@@ -13,7 +13,9 @@ import com.cena.traveloka.inventory.entity.Property;
 import com.cena.traveloka.inventory.repository.AmenityRepository;
 import com.cena.traveloka.inventory.repository.PartnerRepository;
 import com.cena.traveloka.inventory.repository.PropertyRepository;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,10 +29,11 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PropertyService {
-    private final PropertyRepository repo;
-    private final PartnerRepository partnerRepo;
-    private final AmenityRepository amenityRepo;
+    PropertyRepository repo;
+    PartnerRepository partnerRepo;
+    AmenityRepository amenityRepo;
 
     @Transactional
     public PropertyRes create(PropertyCreateReq req) {

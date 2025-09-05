@@ -9,7 +9,9 @@ import com.cena.traveloka.inventory.entity.Property;
 import com.cena.traveloka.inventory.entity.RoomType;
 import com.cena.traveloka.inventory.repository.PropertyRepository;
 import com.cena.traveloka.inventory.repository.RoomTypeRepository;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,9 +20,10 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class RoomTypeService {
-    private final RoomTypeRepository repo;
-    private final PropertyRepository propertyRepo;
+    RoomTypeRepository repo;
+    PropertyRepository propertyRepo;
 
     @Transactional
     public RoomTypeRes create(RoomTypeCreateReq req) {

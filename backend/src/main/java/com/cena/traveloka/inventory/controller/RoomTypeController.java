@@ -5,7 +5,9 @@ import com.cena.traveloka.inventory.dto.request.RoomTypeUpdateReq;
 import com.cena.traveloka.inventory.dto.response.RoomTypeRes;
 import com.cena.traveloka.inventory.service.RoomTypeService;
 import jakarta.validation.Valid;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,8 +16,9 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/inventory/room-types")
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class RoomTypeController {
-    private final RoomTypeService svc;
+    RoomTypeService svc;
 
     @PostMapping
     public RoomTypeRes create(@RequestBody @Valid RoomTypeCreateReq req) {

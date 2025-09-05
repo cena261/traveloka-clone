@@ -7,7 +7,9 @@ import com.cena.traveloka.inventory.dto.request.PartnerUpdateReq;
 import com.cena.traveloka.inventory.dto.response.PartnerRes;
 import com.cena.traveloka.inventory.entity.Partner;
 import com.cena.traveloka.inventory.repository.PartnerRepository;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,8 +18,9 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PartnerService {
-    private final PartnerRepository repo;
+    PartnerRepository repo;
 
     @Transactional
     public PartnerRes create(PartnerCreateReq req) {

@@ -1,11 +1,16 @@
 package com.cena.traveloka.inventory.dto.request;
 
-import lombok.Data;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class PartnerUpdateReq {
-    private String name;
-    private String legalName;
-    private String taxNumber;
-    private String status; // 'active' | 'suspended' | 'pending'
+    String name;
+    String legalName;
+    String taxNumber;
+    String status; // 'active' | 'suspended' | 'pending'
 }

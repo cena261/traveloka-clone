@@ -1,8 +1,13 @@
 package com.cena.traveloka.inventory.dto.request;
 
-import lombok.Data;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class AmenityUpdateReq {
-    private String name;
+    String name;
 }

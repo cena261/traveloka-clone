@@ -1,18 +1,23 @@
 package com.cena.traveloka.inventory.dto.request;
 
-import lombok.Data;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class RoomTypeUpdateReq {
-    private String name;
-    private String description;
+    String name;
+    String description;
 
-    private Integer capacityAdult;
-    private Integer capacityChild;
+    Integer capacityAdult;
+    Integer capacityChild;
 
-    private Long basePriceCents;
-    private String currency;
-    private Boolean refundable;
+    Long basePriceCents;
+    String currency;
+    Boolean refundable;
 
-    private Integer totalUnits;
+    Integer totalUnits;
 }

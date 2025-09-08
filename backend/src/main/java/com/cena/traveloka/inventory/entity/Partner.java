@@ -2,30 +2,32 @@ package com.cena.traveloka.inventory.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import lombok.experimental.FieldDefaults;
+
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "partner", schema = "inventory")
-@Data
-@Builder
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@Table(name = "partner", schema = "inventory")
 public class Partner {
-    @Id @Column(nullable=false) private UUID id;
+    @Id @Column(nullable=false) UUID id;
 
-    @Column(name="owner_user_id", nullable=false) private UUID ownerUserId;
+    @Column(name="owner_user_id", nullable=false) UUID ownerUserId;
 
-    @Column(nullable=false) private String name;
-    @Column(name="legal_name") private String legalName;
-    @Column(name="tax_number") private String taxNumber;
+    @Column(nullable=false) String name;
+    @Column(name="legal_name") String legalName;
+    @Column(name="tax_number") String taxNumber;
 
-    @Column(nullable=false, length=20) private String status; // 'active' | 'suspended' | 'pending'
+    @Column(nullable=false, length=20) String status; // 'active' | 'suspended' | 'pending'
 
-    @Column(name="created_at", updatable=false, insertable=false) private OffsetDateTime createdAt;
-    @Column(name="updated_at", insertable=false) private OffsetDateTime updatedAt;
+    @Column(name="created_at", updatable=false, insertable=false) OffsetDateTime createdAt;
+    @Column(name="updated_at", insertable=false) OffsetDateTime updatedAt;
 
     @PrePersist void pre(){ if(id==null) id=UUID.randomUUID(); if(status==null) status="active"; }
 }

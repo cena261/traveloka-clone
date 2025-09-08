@@ -2,14 +2,19 @@ package com.cena.traveloka.inventory.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.util.UUID;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class PartnerCreateReq {
-    @NotBlank private String name;
-    @NotNull  private UUID ownerUserId;
-    private String legalName;
-    private String taxNumber;
+    @NotBlank String name;
+    @NotNull  UUID ownerUserId;
+    String legalName;
+    String taxNumber;
 }

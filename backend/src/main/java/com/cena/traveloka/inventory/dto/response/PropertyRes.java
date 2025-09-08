@@ -1,34 +1,39 @@
 package com.cena.traveloka.inventory.dto.response;
 
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-@Data @Builder @NoArgsConstructor @AllArgsConstructor
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class PropertyRes {
-    private UUID id;
-    private UUID partnerId;
+    UUID id;
+    UUID partnerId;
 
-    private String kind;
-    private String name;
-    private String description;
+    String kind;
+    String name;
+    String description;
 
-    private String countryCode;
-    private String city;
-    private String addressLine;
-    private String postalCode;
+    String countryCode;
+    String city;
+    String addressLine;
+    String postalCode;
 
-    private Double lat;
-    private Double lng;
+    Double lat;
+    Double lng;
 
-    private BigDecimal ratingAvg;   // NUMERIC(3,2) -> BigDecimal
-    private Integer ratingCount;
+    BigDecimal ratingAvg;   // NUMERIC(3,2) -> BigDecimal
+    Integer ratingCount;
 
-    private String status;          // draft|active|inactive
-    private String timezone;
+    String status;          // draft|active|inactive
+    String timezone;
 
-    private OffsetDateTime createdAt;
-    private OffsetDateTime updatedAt;
+    OffsetDateTime createdAt;
+    OffsetDateTime updatedAt;
 }

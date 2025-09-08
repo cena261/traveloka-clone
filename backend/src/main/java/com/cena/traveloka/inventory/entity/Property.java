@@ -2,6 +2,7 @@ package com.cena.traveloka.inventory.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -9,60 +10,65 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.*;
 
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 @Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @Table(name = "property", schema = "inventory")
 public class Property {
 
     @Id
     @Column(nullable = false)
-    private UUID id;
+    UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "partner_id", nullable = false)
-    private Partner partner;
+    Partner partner;
 
     @Column(nullable = false, length = 30)
-    private String kind;
+    String kind;
 
     @Column(nullable = false)
-    private String name;
+    String name;
 
     @Column(columnDefinition = "text")
-    private String description;
+    String description;
 
     @JdbcTypeCode(SqlTypes.CHAR)
     @Column(name = "country_code", nullable = false, length = 2)
-    private String countryCode;
+    String countryCode;
 
     @Column(nullable = false)
-    private String city;
+    String city;
 
     @Column(name = "address_line", nullable = false)
-    private String addressLine;
+    String addressLine;
 
     @Column(name = "postal_code")
-    private String postalCode;
+    String postalCode;
 
     @Column(name = "lat")
-    private Double latitude;
+    Double latitude;
 
     @Column(name = "lng")
-    private Double longitude;
+    Double longitude;
 
     @Column(name = "rating_avg", precision = 3, scale = 2)
-    private BigDecimal ratingAvg;
+    BigDecimal ratingAvg;
 
     @Column(name = "rating_count")
-    private Integer ratingCount;
+    Integer ratingCount;
 
     @Column(nullable = false, length = 20)
-    private String status; // draft|active|inactive
+    String status; // draft|active|inactive
 
-    private String timezone; // default: Asia/Ho_Chi_Minh
+    String timezone; // default: Asia/Ho_Chi_Minh
 
     @OneToMany(mappedBy = "property", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PropertyImage> images = new ArrayList<>();
+    List<PropertyImage> images = new ArrayList<>();
 
     @ManyToMany
     @JoinTable(
@@ -71,13 +77,13 @@ public class Property {
             joinColumns = @JoinColumn(name = "property_id"),
             inverseJoinColumns = @JoinColumn(name = "amenity_id")
     )
-    private Set<Amenity> amenities = new HashSet<>();
+    Set<Amenity> amenities = new HashSet<>();
 
     @Column(name = "created_at", insertable = false, updatable = false)
-    private OffsetDateTime createdAt;
+    OffsetDateTime createdAt;
 
     @Column(name = "updated_at", insertable = false)
-    private OffsetDateTime updatedAt;
+    OffsetDateTime updatedAt;
 
     @PrePersist
     void pre() {

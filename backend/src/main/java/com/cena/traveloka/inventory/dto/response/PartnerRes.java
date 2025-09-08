@@ -1,15 +1,20 @@
 package com.cena.traveloka.inventory.dto.response;
 
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.util.UUID;
 
-@Data @Builder @NoArgsConstructor @AllArgsConstructor
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class PartnerRes {
-    private UUID id;
-    private UUID ownerUserId;
-    private String name;
-    private String legalName;
-    private String taxNumber;
-    private String status;
+    UUID id;
+    UUID ownerUserId;
+    String name;
+    String legalName;
+    String taxNumber;
+    String status;
 }

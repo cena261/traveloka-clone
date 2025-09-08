@@ -1,23 +1,28 @@
 package com.cena.traveloka.inventory.dto.response;
 
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.util.UUID;
 
-@Data @Builder @NoArgsConstructor @AllArgsConstructor
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class RoomTypeRes {
-    private UUID id;
-    private UUID propertyId;
+    UUID id;
+    UUID propertyId;
 
-    private String name;
-    private String description;
+    String name;
+    String description;
 
-    private Integer capacityAdult;
-    private Integer capacityChild;
+    Integer capacityAdult;
+    Integer capacityChild;
 
-    private Long basePriceCents;
-    private String currency;
-    private Boolean refundable;
+    Long basePriceCents;
+    String currency;
+    Boolean refundable;
 
-    private Integer totalUnits;
+    Integer totalUnits;
 }

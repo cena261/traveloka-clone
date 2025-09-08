@@ -1,10 +1,15 @@
 package com.cena.traveloka.inventory.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class AmenityCreateReq {
-    @NotBlank private String code;   // unique
-    @NotBlank private String name;
+    @NotBlank String code;
+    @NotBlank String name;
 }

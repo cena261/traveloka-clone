@@ -1,12 +1,17 @@
 package com.cena.traveloka.inventory.dto.response;
 
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.util.UUID;
 
-@Data @Builder @NoArgsConstructor @AllArgsConstructor
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class AmenityRes {
-    private UUID id;
-    private String code;
-    private String name;
+    UUID id;
+    String code;
+    String name;
 }

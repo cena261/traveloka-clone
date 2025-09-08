@@ -1,21 +1,26 @@
 package com.cena.traveloka.inventory.dto.request;
 
-import lombok.Data;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class PropertyUpdateReq {
-    private String kind;
-    private String name;
-    private String description;
+    String kind;
+    String name;
+    String description;
 
-    private String countryCode;
-    private String city;
-    private String addressLine;
-    private String postalCode;
+    String countryCode;
+    String city;
+    String addressLine;
+    String postalCode;
 
-    private Double lat;
-    private Double lng;
+    Double lat;
+    Double lng;
 
-    private String status;     // draft|active|inactive
-    private String timezone;
+    String status;     // draft|active|inactive
+    String timezone;
 }

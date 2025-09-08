@@ -3,7 +3,10 @@ package com.cena.traveloka.inventory.service;
 import io.minio.*;
 import io.minio.http.Method;
 import jakarta.annotation.PostConstruct;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -13,11 +16,13 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@Slf4j
 public class StorageService {
     private final MinioClient minio;
 
-    @Value("${minio.bucket}") private String bucket;
-    @Value("${minio.external-url}") private String externalUrl;
+    @Value("${minio.bucket}") String bucket;
+    @Value("${minio.external-url}") String externalUrl;
 
     @PostConstruct
     public void ensureBucket() throws Exception {

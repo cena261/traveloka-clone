@@ -38,4 +38,6 @@ build/
 target/
 node_modules/
 .DS_Store
+/backend-spec/
+/specs/
 

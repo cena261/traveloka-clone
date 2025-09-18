@@ -10,106 +10,258 @@ import com.cena.traveloka.catalog.inventory.dto.response.PropertyRes;
 import com.cena.traveloka.catalog.inventory.entity.Amenity;
 import com.cena.traveloka.catalog.inventory.entity.Partner;
 import com.cena.traveloka.catalog.inventory.entity.Property;
-import com.cena.traveloka.catalog.inventory.repository.AmenityRepository;
-import com.cena.traveloka.catalog.inventory.repository.PartnerRepository;
-import com.cena.traveloka.catalog.inventory.repository.PropertyRepository;
+import com.cena.traveloka.catalog.inventory.entity.PropertyAmenity;
+import com.cena.traveloka.catalog.inventory.repository.*;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
+import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Validated
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PropertyService {
     PropertyRepository repo;
     PartnerRepository partnerRepo;
     AmenityRepository amenityRepo;
+    PropertyAmenityRepository propertyAmenityRepo;
+    GeometryFactory geometryFactory = new GeometryFactory();
 
     @Transactional
-    public PropertyRes create(PropertyCreateReq req) {
+    @CacheEvict(value = "properties", allEntries = true)
+    public PropertyRes create(@NotNull PropertyCreateReq req) {
+        log.info("Creating new property: {}", req.getName());
+
         Partner partner = partnerRepo.findById(req.getPartnerId())
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Partner not found: " + req.getPartnerId()));
 
-        Property e = new Property();
-        e.setPartner(partner);
-        e.setKind(req.getKind());
-        e.setName(req.getName());
-        e.setDescription(req.getDescription());
-        e.setCountryCode(req.getCountryCode());
-        e.setCity(req.getCity());
-        e.setAddressLine(req.getAddressLine());
-        e.setPostalCode(req.getPostalCode());
-        e.setLatitude(req.getLat());
-        e.setLongitude(req.getLng());
-        e.setTimezone(req.getTimezone() != null ? req.getTimezone() : "Asia/Ho_Chi_Minh");
-        e.setStatus("draft");
+        validatePartnerStatus(partner);
+        validatePropertyCreation(req);
 
-        repo.save(e);
-        return toRes(e);
+        Point geography = createGeographyPoint(req.getLat(), req.getLng());
+
+        Property property = Property.builder()
+                .partner(partner)
+                .propertyCode(req.getPropertyCode())
+                .kind(req.getKind())
+                .name(req.getName())
+                .description(req.getDescription())
+                .countryCode(req.getCountryCode())
+                .city(req.getCity())
+                .addressLine(req.getAddressLine())
+                .postalCode(req.getPostalCode())
+                .latitude(req.getLat())
+                .longitude(req.getLng())
+                .geography(geography)
+                .timezone(req.getTimezone() != null ? req.getTimezone() : "Asia/Ho_Chi_Minh")
+                .status(Property.PropertyStatus.DRAFT)
+                .starRating(req.getStarRating())
+                .build();
+
+        property = repo.save(property);
+        log.info("Property created successfully with ID: {}", property.getId());
+
+        return toRes(property);
     }
 
     public Page<PropertyRes> listByPartner(UUID partnerId, int page, int size) {
         Partner partner = partnerRepo.findById(partnerId)
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Partner not found: " + partnerId));
-        return repo.findByPartner(partner, PageRequest.of(page, size, Sort.by("createdAt").descending()))
-                .map(this::toRes);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return repo.findByPartner(partner, pageable).map(this::toRes);
     }
 
-    public PropertyRes get(UUID id) {
+    public Page<PropertyRes> findByStatus(Property.PropertyStatus status, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return repo.findByStatus(status, pageable).map(this::toRes);
+    }
+
+    public Page<PropertyRes> searchProperties(Property.PropertyStatus status, String search, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return repo.findByStatusAndSearch(status, search, pageable).map(this::toRes);
+    }
+
+    public List<PropertyRes> findPropertiesNearLocation(double latitude, double longitude, double radiusKm, int limit) {
+        double radiusMeters = radiusKm * 1000;
+        List<Property> properties = repo.findNearestProperties(latitude, longitude, radiusMeters);
+        return properties.stream()
+                .limit(limit)
+                .map(this::toRes)
+                .toList();
+    }
+
+    public List<PropertyRes> findPropertiesWithinRadius(double latitude, double longitude, double radiusKm) {
+        double radiusMeters = radiusKm * 1000;
+        List<Property> properties = repo.findPropertiesWithinRadius(latitude, longitude, radiusMeters);
+        return properties.stream().map(this::toRes).toList();
+    }
+
+    @Cacheable(value = "properties", key = "#id")
+    public PropertyRes get(@NotNull UUID id) {
         return toRes(find(id));
     }
 
-    @Transactional
-    public PropertyRes update(UUID id, PropertyUpdateReq req) {
-        Property e = find(id);
-        if (req.getKind() != null) e.setKind(req.getKind());
-        if (req.getName() != null) e.setName(req.getName());
-        if (req.getDescription() != null) e.setDescription(req.getDescription());
-        if (req.getCountryCode() != null) e.setCountryCode(req.getCountryCode());
-        if (req.getCity() != null) e.setCity(req.getCity());
-        if (req.getAddressLine() != null) e.setAddressLine(req.getAddressLine());
-        if (req.getPostalCode() != null) e.setPostalCode(req.getPostalCode());
-        if (req.getLat() != null) e.setLatitude(req.getLat());
-        if (req.getLng() != null) e.setLongitude(req.getLng());
-        if (req.getTimezone() != null) e.setTimezone(req.getTimezone());
-        if (req.getStatus() != null) e.setStatus(req.getStatus()); // draft|active|inactive
-        return toRes(e);
+    public Optional<PropertyRes> findByPropertyCode(String propertyCode) {
+        return repo.findByPropertyCode(propertyCode).map(this::toRes);
     }
 
     @Transactional
-    public void delete(UUID id) {
-        repo.delete(find(id));
+    @CacheEvict(value = "properties", allEntries = true)
+    public PropertyRes update(@NotNull UUID id, @NotNull PropertyUpdateReq req) {
+        log.info("Updating property: {}", id);
+
+        Property property = find(id);
+        validatePropertyUpdate(property, req);
+
+        if (req.getKind() != null) property.setKind(req.getKind());
+        if (req.getName() != null) property.setName(req.getName());
+        if (req.getDescription() != null) property.setDescription(req.getDescription());
+        if (req.getCountryCode() != null) property.setCountryCode(req.getCountryCode());
+        if (req.getCity() != null) property.setCity(req.getCity());
+        if (req.getAddressLine() != null) property.setAddressLine(req.getAddressLine());
+        if (req.getPostalCode() != null) property.setPostalCode(req.getPostalCode());
+        if (req.getStarRating() != null) property.setStarRating(req.getStarRating());
+        if (req.getTimezone() != null) property.setTimezone(req.getTimezone());
+        if (req.getStatus() != null) property.setStatus(req.getStatus());
+
+        if (req.getLat() != null && req.getLng() != null) {
+            property.setLatitude(req.getLat());
+            property.setLongitude(req.getLng());
+            property.setGeography(createGeographyPoint(req.getLat(), req.getLng()));
+        }
+
+        property = repo.save(property);
+        log.info("Property updated successfully: {}", id);
+
+        return toRes(property);
     }
 
     @Transactional
-    public PropertyRes bindAmenities(UUID propertyId, PropertyAmenityBindReq req) {
+    @CacheEvict(value = "properties", allEntries = true)
+    public PropertyRes activateProperty(@NotNull UUID id) {
+        Property property = find(id);
+        if (property.getStatus() != Property.PropertyStatus.PENDING_VERIFICATION) {
+            throw new AppException(ErrorCode.INVALID_REQUEST,
+                "Property must be in PENDING_VERIFICATION status to activate");
+        }
+
+        property.setStatus(Property.PropertyStatus.ACTIVE);
+        property = repo.save(property);
+
+        log.info("Property activated: {}", id);
+        return toRes(property);
+    }
+
+    @Transactional
+    @CacheEvict(value = "properties", allEntries = true)
+    public PropertyRes suspendProperty(@NotNull UUID id, String reason) {
+        Property property = find(id);
+        if (property.getStatus() != Property.PropertyStatus.ACTIVE) {
+            throw new AppException(ErrorCode.INVALID_REQUEST,
+                "Only active properties can be suspended");
+        }
+
+        property.setStatus(Property.PropertyStatus.SUSPENDED);
+        property = repo.save(property);
+
+        log.info("Property suspended: {} - Reason: {}", id, reason);
+        return toRes(property);
+    }
+
+    @Transactional
+    @CacheEvict(value = "properties", allEntries = true)
+    public void delete(@NotNull UUID id) {
+        Property property = find(id);
+        if (property.getStatus() == Property.PropertyStatus.ACTIVE) {
+            throw new AppException(ErrorCode.INVALID_REQUEST,
+                "Cannot delete active property. Suspend first.");
+        }
+
+        repo.delete(property);
+        log.info("Property deleted: {}", id);
+    }
+
+    public List<PropertyRes> getTopPerformingProperties(Integer minBookings, Double minRating, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Property> properties = repo.findTopPerformingProperties(minBookings, minRating, pageable);
+        return properties.getContent().stream().map(this::toRes).toList();
+    }
+
+    @Transactional
+    @CacheEvict(value = {"properties", "propertyAmenities"}, allEntries = true)
+    public PropertyRes bindAmenities(@NotNull UUID propertyId, @NotNull PropertyAmenityBindReq req) {
+        log.info("Binding amenities to property: {}", propertyId);
+
         Property property = find(propertyId);
-
         List<Amenity> amenities = amenityRepo.findAllById(req.getAmenityIds());
+
         if (amenities.size() != req.getAmenityIds().size()) {
             throw new AppException(ErrorCode.NOT_FOUND, "Some amenities not found");
         }
 
-        property.setAmenities(new HashSet<>(amenities));
+        propertyAmenityRepo.findByProperty(property).forEach(propertyAmenityRepo::delete);
+
+        for (int i = 0; i < amenities.size(); i++) {
+            Amenity amenity = amenities.get(i);
+            PropertyAmenityBindReq.AmenityConfig config = req.getAmenityConfigs().get(i);
+
+            PropertyAmenity propertyAmenity = PropertyAmenity.builder()
+                    .property(property)
+                    .amenity(amenity)
+                    .isFree(config.getIsFree())
+                    .additionalCost(config.getAdditionalCost())
+                    .availableFrom(config.getAvailableFrom())
+                    .availableTo(config.getAvailableTo())
+                    .seasonalAvailability(config.getSeasonalAvailability())
+                    .notes(config.getNotes())
+                    .build();
+
+            propertyAmenityRepo.save(propertyAmenity);
+        }
+
+        log.info("Amenities bound successfully to property: {}", propertyId);
         return toRes(property);
     }
 
-    public List<AmenityRes> listAmenities(UUID propertyId) {
+    @Cacheable(value = "propertyAmenities", key = "#propertyId")
+    public List<AmenityRes> listAmenities(@NotNull UUID propertyId) {
         Property property = find(propertyId);
-        return property.getAmenities().stream()
-                .map(this::toAmenityRes)
+        List<PropertyAmenity> propertyAmenities = propertyAmenityRepo.findByProperty(property);
+        return propertyAmenities.stream()
+                .map(pa -> toAmenityRes(pa.getAmenity()))
+                .collect(Collectors.toList());
+    }
+
+    public List<AmenityRes> listAmenitiesByCategory(@NotNull UUID propertyId, Amenity.AmenityCategory category) {
+        Property property = find(propertyId);
+        List<PropertyAmenity> propertyAmenities = propertyAmenityRepo.findByPropertyAndAmenityCategory(property, category);
+        return propertyAmenities.stream()
+                .map(pa -> toAmenityRes(pa.getAmenity()))
+                .collect(Collectors.toList());
+    }
+
+    public List<AmenityRes> listFreeAmenities(@NotNull UUID propertyId) {
+        Property property = find(propertyId);
+        List<PropertyAmenity> propertyAmenities = propertyAmenityRepo.findByPropertyAndIsFree(property, true);
+        return propertyAmenities.stream()
+                .map(pa -> toAmenityRes(pa.getAmenity()))
                 .collect(Collectors.toList());
     }
 
@@ -118,26 +270,53 @@ public class PropertyService {
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Property not found: " + id));
     }
 
-    private PropertyRes toRes(Property e) {
-        BigDecimal ratingAvg = e.getRatingAvg();
+    private Point createGeographyPoint(Double latitude, Double longitude) {
+        return geometryFactory.createPoint(new Coordinate(longitude, latitude));
+    }
+
+    private void validatePartnerStatus(Partner partner) {
+        if (partner.getStatus() != Partner.PartnerStatus.ACTIVE) {
+            throw new AppException(ErrorCode.INVALID_REQUEST,
+                "Partner must be active to create properties");
+        }
+    }
+
+    private void validatePropertyCreation(PropertyCreateReq req) {
+        if (repo.existsByPropertyCode(req.getPropertyCode())) {
+            throw new AppException(ErrorCode.ALREADY_EXISTS,
+                "Property with code already exists: " + req.getPropertyCode());
+        }
+    }
+
+    private void validatePropertyUpdate(Property existing, PropertyUpdateReq req) {
+        if (existing.getStatus() == Property.PropertyStatus.ACTIVE &&
+            req.getStatus() != null && req.getStatus() != Property.PropertyStatus.ACTIVE) {
+            log.warn("Attempting to change status of active property: {}", existing.getId());
+        }
+    }
+
+    private PropertyRes toRes(Property property) {
         return PropertyRes.builder()
-                .id(e.getId())
-                .partnerId(e.getPartner().getId())
-                .kind(e.getKind())
-                .name(e.getName())
-                .description(e.getDescription())
-                .countryCode(e.getCountryCode())
-                .city(e.getCity())
-                .addressLine(e.getAddressLine())
-                .postalCode(e.getPostalCode())
-                .lat(e.getLatitude())
-                .lng(e.getLongitude())
-                .ratingAvg(ratingAvg)
-                .ratingCount(e.getRatingCount())
-                .status(e.getStatus())
-                .timezone(e.getTimezone())
-                .createdAt(e.getCreatedAt() instanceof OffsetDateTime odt ? odt : e.getCreatedAt())
-                .updatedAt(e.getUpdatedAt() instanceof OffsetDateTime odt2 ? odt2 : e.getUpdatedAt())
+                .id(property.getId())
+                .partnerId(property.getPartner().getId())
+                .propertyCode(property.getPropertyCode())
+                .kind(property.getKind())
+                .name(property.getName())
+                .description(property.getDescription())
+                .countryCode(property.getCountryCode())
+                .city(property.getCity())
+                .addressLine(property.getAddressLine())
+                .postalCode(property.getPostalCode())
+                .lat(property.getLatitude())
+                .lng(property.getLongitude())
+                .starRating(property.getStarRating())
+                .averageRating(property.getAverageRating())
+                .totalReviews(property.getTotalReviews())
+                .totalBookings(property.getTotalBookings())
+                .status(property.getStatus())
+                .timezone(property.getTimezone())
+                .createdAt(property.getCreatedAt())
+                .updatedAt(property.getUpdatedAt())
                 .build();
     }
 

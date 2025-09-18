@@ -48,4 +48,12 @@ public class StorageService {
                 .method(Method.GET).bucket(bucket).object(objectKey)
                 .expiry(minutes, TimeUnit.MINUTES).build());
     }
+
+    public void delete(String objectKey) throws Exception {
+        minio.removeObject(RemoveObjectArgs.builder()
+                .bucket(bucket)
+                .object(objectKey)
+                .build());
+        log.info("Deleted object from storage: {}", objectKey);
+    }
 }

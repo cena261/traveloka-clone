@@ -1,8 +1,11 @@
 package com.cena.traveloka.catalog.inventory.dto.response;
 
+import com.cena.traveloka.catalog.inventory.entity.RoomType;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Data
@@ -13,16 +16,20 @@ import java.util.UUID;
 public class RoomTypeRes {
     UUID id;
     UUID propertyId;
-
-    String name;
+    String typeCode;
+    String typeName;
     String description;
-
-    Integer capacityAdult;
-    Integer capacityChild;
-
-    Long basePriceCents;
+    Integer maxOccupancy;
+    Integer adultCapacity;
+    Integer childCapacity;
+    Integer infantCapacity;
+    BigDecimal basePrice;
     String currency;
-    Boolean refundable;
-
-    Integer totalUnits;
+    Boolean isRefundable;
+    BigDecimal roomSize;
+    String bedType;
+    RoomType.SmokingPolicy smokingPolicy;
+    RoomType.RoomTypeStatus status;
+    OffsetDateTime createdAt;
+    OffsetDateTime updatedAt;
 }

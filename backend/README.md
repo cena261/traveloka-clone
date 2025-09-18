@@ -287,37 +287,6 @@ For detailed deployment instructions, see [Deployment Guide](docs/search/DEPLOYM
 - Update documentation for API changes
 - Run `mvn verify` before committing
 
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 📞 Support
-
-- **Documentation**: [docs/search/](docs/search/)
-- **Issues**: [GitHub Issues](https://github.com/traveloka/search-engine/issues)
-- **Email**: search-team@traveloka.com
-- **Slack**: #search-engine-support
-
-## 🗺️ Roadmap
-
-### Q4 2023
-- ✅ Core search functionality
-- ✅ Vietnamese language support
-- ✅ Geospatial search
-- ✅ Real-time analytics
-
-### Q1 2024
-- 🔄 Machine learning personalization
-- 🔄 Advanced analytics dashboard
-- 🔄 Multi-language optimization
-- 🔄 Voice search integration
-
-### Q2 2024
-- 🔮 AI-powered search intent
-- 🔮 Image-based property search
-- 🔮 Predictive suggestions
-- 🔮 Global multi-region deployment
-
 ## 🏅 Acknowledgments
 
 - Spring Boot team for the excellent framework
@@ -328,4 +297,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Built with ❤️ by the Traveloka Search Team**
+**Built with ❤️ by Cena**

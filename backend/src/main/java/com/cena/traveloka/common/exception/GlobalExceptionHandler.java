@@ -84,7 +84,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleOthers(Exception ex, HttpServletRequest req) {
-        var code = ErrorCode.INTERNAL_ERROR;
+        var code = ErrorCode.INTERNAL_SERVER_ERROR;
         return ResponseEntity.status(code.getStatus()).body(
                 ErrorResponse.builder()
                         .code(code.name())

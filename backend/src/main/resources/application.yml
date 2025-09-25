@@ -1,13 +1,22 @@
 spring:
   application:
-    name: traveloka-clone
+    name: traveloka-backend
   profiles:
     default: dev
+    #include: iam
 
 server:
   port: 8080
+  servlet:
+    context-path: /api/v1
 
 logging:
   level:
-    org.springframework.security: INFO
-    org.hibernate.SQL: DEBUG
+    root: INFO
+    com.cena.traveloka: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+    org.springframework.cache: INFO
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"

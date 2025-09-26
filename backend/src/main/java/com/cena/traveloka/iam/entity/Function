@@ -1,0 +1,3 @@
+iam.user_has_permission(p_user_id UUID, p_resource VARCHAR, p_action VARCHAR): Returns true if the given user has an active role that grants the specified action on the resource
+iam.get_user_roles(p_user_id UUID): Returns all active roles (name and display_name) assigned to the given user
+iam.cleanup_expired_sessions(): Marks active sessions as inactive if their expires_at has passed, returns number of sessions updated

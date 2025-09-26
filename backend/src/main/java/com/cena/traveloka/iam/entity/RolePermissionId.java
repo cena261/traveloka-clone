@@ -13,10 +13,10 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserRoleId implements Serializable {
-    @JdbcTypeCode(SqlTypes.UUID)
-    UUID userId;
-
+public class RolePermissionId implements Serializable {
     @JdbcTypeCode(SqlTypes.UUID)
     UUID roleId;
+
+    @JdbcTypeCode(SqlTypes.UUID)
+    UUID permissionId;
 }

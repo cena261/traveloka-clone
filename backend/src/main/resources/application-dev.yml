@@ -16,7 +16,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: validate
       naming:
         implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
@@ -39,7 +39,7 @@ spring:
     enabled: true
     baseline-on-migrate: true
     validate-on-migrate: false
-    schemas: iam, inventory, availability, pricing, booking, payment, review, notify
+    schemas: iam, inventory, availability, pricing, booking, payment, review, notify, geo
 
   data:
     redis:

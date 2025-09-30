@@ -43,8 +43,8 @@ public class RedisConfig {
     @Value("${spring.data.redis.password:}")
     private String password;
 
-    @Value("${spring.data.redis.timeout:2000}")
-    private int timeout;
+    @Value("${spring.data.redis.timeout:2000ms}")
+    private Duration timeout;
 
     @Value("${app.redis.pool.max-total:20}")
     private int maxTotal;
@@ -87,7 +87,7 @@ public class RedisConfig {
      * @return configured JedisConnectionFactory
      */
     @Bean
-    public RedisConnectionFactory jedisConnectionFactory() {
+    public RedisConnectionFactory redisConnectionFactory() {
         // Redis standalone configuration
         RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration();
         redisConfig.setHostName(host);
@@ -123,7 +123,7 @@ public class RedisConfig {
 
         // Create Jedis connection factory using Spring Boot 3 approach
         JedisConnectionFactory jedisConnectionFactory = new JedisConnectionFactory(redisConfig);
-        jedisConnectionFactory.setTimeout(timeout);
+        jedisConnectionFactory.setTimeout((int) timeout.toMillis());
 
         return jedisConnectionFactory;
     }
@@ -158,25 +158,4 @@ public class RedisConfig {
         return template;
     }
 
-    /**
-     * Configure RedisTemplate specifically for String operations
-     * @param connectionFactory Redis connection factory
-     * @return configured RedisTemplate for strings
-     */
-    @Bean
-    public RedisTemplate<String, String> stringRedisTemplate(RedisConnectionFactory connectionFactory) {
-        RedisTemplate<String, String> template = new RedisTemplate<>();
-        template.setConnectionFactory(connectionFactory);
-
-        // String serializer for both keys and values
-        StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
-        template.setKeySerializer(stringRedisSerializer);
-        template.setValueSerializer(stringRedisSerializer);
-        template.setHashKeySerializer(stringRedisSerializer);
-        template.setHashValueSerializer(stringRedisSerializer);
-        template.setDefaultSerializer(stringRedisSerializer);
-
-        template.afterPropertiesSet();
-        return template;
-    }
 }

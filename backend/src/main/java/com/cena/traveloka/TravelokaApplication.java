@@ -30,7 +30,9 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  * @version 1.0.0
  * @since 2024-01-01
  */
-@SpringBootApplication
+@SpringBootApplication(exclude = {
+    org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration.class
+})
 //@SpringBootApplication(scanBasePackages = {
 //    "com.cena.traveloka.common",
 //    "com.cena.traveloka.iam",

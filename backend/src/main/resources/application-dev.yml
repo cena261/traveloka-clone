@@ -7,6 +7,7 @@ spring:
     url: jdbc:postgresql://localhost:${POSTGRES_PORT:5440}/${POSTGRES_DB:traveloka}
     username: ${POSTGRES_USER:postgres}
     password: ${POSTGRES_PASSWORD:password}
+    driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 20
       minimum-idle: 5

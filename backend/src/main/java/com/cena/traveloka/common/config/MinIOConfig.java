@@ -31,40 +31,40 @@ public class MinIOConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(MinIOConfig.class);
 
-    @Value("${app.minio.endpoint:http://localhost:9000}")
+    @Value("${minio.endpoint}")
     private String endpoint;
 
-    @Value("${app.minio.access-key}")
+    @Value("${minio.accessKey}")
     private String accessKey;
 
-    @Value("${app.minio.secret-key}")
+    @Value("${minio.secretKey}")
     private String secretKey;
 
-    @Value("${app.minio.region:us-east-1}")
+    @Value("${minio.region:us-east-1}")
     private String region;
 
-    @Value("${app.minio.bucket.default:traveloka-default}")
+    @Value("${minio.bucket:traveloka-default}")
     private String defaultBucket;
 
-    @Value("${app.minio.bucket.auto-create:true}")
+    @Value("${minio.bucket.auto-create:true}")
     private boolean autoCreateBuckets;
 
-    @Value("${app.minio.bucket.names:traveloka-default,traveloka-images,traveloka-documents,traveloka-avatars}")
+    @Value("${minio.bucket.names:traveloka-default,traveloka-images,traveloka-documents,traveloka-avatars}")
     private List<String> bucketNames;
 
-    @Value("${app.minio.bucket.public-buckets:traveloka-images,traveloka-avatars}")
+    @Value("${minio.bucket.public-buckets:traveloka-images,traveloka-avatars}")
     private List<String> publicBuckets;
 
-    @Value("${app.minio.connection.timeout:10s}")
+    @Value("${minio.connection.timeout:10s}")
     private Duration connectionTimeout;
 
-    @Value("${app.minio.connection.read-timeout:30s}")
+    @Value("${minio.connection.read-timeout:30s}")
     private Duration readTimeout;
 
-    @Value("${app.minio.connection.write-timeout:30s}")
+    @Value("${minio.connection.write-timeout:30s}")
     private Duration writeTimeout;
 
-    @Value("${app.minio.connection.secure:false}")
+    @Value("${minio.connection.secure:false}")
     private boolean secure;
 
     private MinioClient minioClient;

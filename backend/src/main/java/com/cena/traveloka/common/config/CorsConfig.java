@@ -276,14 +276,4 @@ public class CorsConfig implements WebMvcConfigurer {
         return "prod".equalsIgnoreCase(environment) || "production".equalsIgnoreCase(environment);
     }
 
-    /**
-     * Provide CORS configuration source as bean
-     * @return configured CorsConfigurationSource
-     */
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", createDefaultCorsConfiguration());
-        return source;
-    }
 }

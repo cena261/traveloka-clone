@@ -583,7 +583,7 @@ CREATE OR REPLACE FUNCTION iam.user_has_permission(
     p_resource VARCHAR,
     p_action VARCHAR
 )
-RETURNS BOOLEAN AS $
+RETURNS BOOLEAN AS $$
 DECLARE
 has_permission BOOLEAN;
 BEGIN
@@ -601,11 +601,11 @@ SELECT EXISTS (
 
 RETURN has_permission;
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- Function to get user's active roles
 CREATE OR REPLACE FUNCTION iam.get_user_roles(p_user_id UUID)
-RETURNS TABLE(role_name VARCHAR, display_name VARCHAR) AS $
+RETURNS TABLE(role_name VARCHAR, display_name VARCHAR) AS $$
 BEGIN
 RETURN QUERY
 SELECT r.name, r.display_name
@@ -616,11 +616,11 @@ WHERE ur.user_id = p_user_id
   AND r.status = 'active'
   AND (ur.expires_at IS NULL OR ur.expires_at > CURRENT_TIMESTAMP);
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- Function to clean expired sessions
 CREATE OR REPLACE FUNCTION iam.cleanup_expired_sessions()
-RETURNS INTEGER AS $
+RETURNS INTEGER AS $$
 DECLARE
 deleted_count INTEGER;
 BEGIN
@@ -634,7 +634,7 @@ WHERE is_active = TRUE
 GET DIAGNOSTICS deleted_count = ROW_COUNT;
 RETURN deleted_count;
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- =====================================================
 -- MIGRATION METADATA

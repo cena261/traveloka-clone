@@ -333,38 +333,6 @@ CREATE INDEX idx_property_amenities_property ON inventory.property_amenities(pro
 CREATE INDEX idx_property_amenities_category ON inventory.property_amenities(category);
 
 -- =====================================================
--- PROPERTY IMAGES TABLE
--- =====================================================
-
-CREATE TABLE inventory.property_images (
-                                           id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                                           property_id UUID NOT NULL REFERENCES inventory.properties(id) ON DELETE CASCADE,
-                                           room_type_id UUID REFERENCES inventory.room_types(id) ON DELETE CASCADE,
-
-    -- Image details
-                                           url common.url NOT NULL,
-                                           thumbnail_url common.url,
-                                           title VARCHAR(200),
-                                           description TEXT,
-                                           category VARCHAR(100), -- exterior, lobby, room, bathroom, amenity, dining, etc
-
-    -- Order
-                                           display_order INTEGER DEFAULT 0,
-                                           is_primary BOOLEAN DEFAULT FALSE,
-
-    -- Status
-                                           is_active BOOLEAN DEFAULT TRUE,
-
-    -- Metadata
-                                           uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                                           uploaded_by VARCHAR(100)
-);
-
-CREATE INDEX idx_property_images_property ON inventory.property_images(property_id);
-CREATE INDEX idx_property_images_room_type ON inventory.property_images(room_type_id);
-CREATE INDEX idx_property_images_category ON inventory.property_images(category);
-
--- =====================================================
 -- ROOM TYPES TABLE
 -- =====================================================
 
@@ -418,6 +386,38 @@ CREATE INDEX idx_room_types_property ON inventory.room_types(property_id);
 CREATE INDEX idx_room_types_type ON inventory.room_types(room_type);
 CREATE INDEX idx_room_types_occupancy ON inventory.room_types(max_occupancy);
 CREATE INDEX idx_room_types_price ON inventory.room_types(base_price);
+
+-- =====================================================
+-- PROPERTY IMAGES TABLE
+-- =====================================================
+
+CREATE TABLE inventory.property_images (
+                                           id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                                           property_id UUID NOT NULL REFERENCES inventory.properties(id) ON DELETE CASCADE,
+                                           room_type_id UUID REFERENCES inventory.room_types(id) ON DELETE CASCADE,
+
+    -- Image details
+                                           url common.url NOT NULL,
+                                           thumbnail_url common.url,
+                                           title VARCHAR(200),
+                                           description TEXT,
+                                           category VARCHAR(100), -- exterior, lobby, room, bathroom, amenity, dining, etc
+
+    -- Order
+                                           display_order INTEGER DEFAULT 0,
+                                           is_primary BOOLEAN DEFAULT FALSE,
+
+    -- Status
+                                           is_active BOOLEAN DEFAULT TRUE,
+
+    -- Metadata
+                                           uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                                           uploaded_by VARCHAR(100)
+);
+
+CREATE INDEX idx_property_images_property ON inventory.property_images(property_id);
+CREATE INDEX idx_property_images_room_type ON inventory.property_images(room_type_id);
+CREATE INDEX idx_property_images_category ON inventory.property_images(category);
 
 -- =====================================================
 -- AIRLINES TABLE
@@ -670,7 +670,7 @@ WHERE ST_DWithin(
   AND (p_property_type IS NULL OR p.property_type = p_property_type)
 ORDER BY distance_km;
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- Function to get property availability summary
 CREATE OR REPLACE FUNCTION inventory.get_property_availability_summary(
@@ -684,7 +684,7 @@ RETURNS TABLE (
     total_rooms INTEGER,
     available_rooms INTEGER,
     base_price DECIMAL
-) AS $
+) AS $$
 BEGIN
     -- This is a placeholder that will be implemented when availability tables are created
 RETURN QUERY
@@ -699,7 +699,7 @@ WHERE rt.property_id = p_property_id
   AND rt.is_active = TRUE
   AND rt.is_bookable = TRUE;
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- Function to calculate airline route statistics
 CREATE OR REPLACE FUNCTION inventory.calculate_route_statistics(
@@ -712,7 +712,7 @@ RETURNS TABLE (
     flights_per_week INTEGER,
     average_duration_minutes INTEGER,
     has_direct_flights BOOLEAN
-) AS $
+) AS $$
 BEGIN
 RETURN QUERY
 SELECT
@@ -729,7 +729,7 @@ WHERE fr.origin_airport_id = p_origin_airport_id
   AND a.is_active = TRUE
 ORDER BY fr.flights_per_week DESC;
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- =====================================================
 -- SAMPLE DATA

@@ -457,7 +457,7 @@ CREATE INDEX idx_distance_to ON geo.distance_matrix(to_location_type, to_locatio
 
 CREATE TABLE geo.timezones (
                                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                               timezone_name VARCHAR(50) PRIMARY KEY,
+                               timezone_name VARCHAR(50),
                                utc_offset_hours DECIMAL(3,1),
                                dst_offset_hours DECIMAL(3,1),
                                uses_dst BOOLEAN DEFAULT FALSE,
@@ -529,14 +529,14 @@ SELECT * FROM (
               ) AS all_locations
 ORDER BY distance_km;
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- Function to get country by coordinates
 CREATE OR REPLACE FUNCTION geo.get_country_by_coords(
     p_latitude DECIMAL,
     p_longitude DECIMAL
 )
-RETURNS UUID AS $
+RETURNS UUID AS $$
 DECLARE
 country_id UUID;
 BEGIN
@@ -547,14 +547,14 @@ WHERE ST_Contains(c.boundaries, ST_SetSRID(ST_MakePoint(p_longitude, p_latitude)
 
 RETURN country_id;
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- Function to calculate distance between two locations using PostGIS
 CREATE OR REPLACE FUNCTION geo.calculate_distance_postgis(
     loc1_lat DECIMAL, loc1_lon DECIMAL,
     loc2_lat DECIMAL, loc2_lon DECIMAL
 )
-RETURNS DECIMAL AS $
+RETURNS DECIMAL AS $$
 BEGIN
 RETURN ROUND(
         ST_Distance(
@@ -563,7 +563,7 @@ RETURN ROUND(
         ) / 1000, 2
        );
 END;
-$ LANGUAGE plpgsql IMMUTABLE;
+$$ LANGUAGE plpgsql IMMUTABLE;
 
 -- =====================================================
 -- SAMPLE DATA - Major Southeast Asian Locations

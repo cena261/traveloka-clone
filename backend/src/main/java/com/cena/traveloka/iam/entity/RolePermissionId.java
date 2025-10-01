@@ -13,6 +13,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode
 public class RolePermissionId implements Serializable {
     @JdbcTypeCode(SqlTypes.UUID)
     UUID roleId;

@@ -1,5 +1,6 @@
 package com.cena.traveloka.common.dto;
 
+import com.cena.traveloka.common.enums.ResponseStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 

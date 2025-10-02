@@ -1,4 +1,4 @@
-package com.cena.traveloka.common.dto;
+package com.cena.traveloka.common.enums;
 
 /**
  * Enumeration defining the possible status values for API responses.

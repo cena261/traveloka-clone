@@ -10,9 +10,12 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * T022: SessionRepository interface
+ * T022: IamSessionRepository interface
  * Repository for Session entity with session management queries.
  * Supports FR-016: 5 concurrent session limit with oldest session eviction.
+ *
+ * NOTE: Renamed from SessionRepository to IamSessionRepository to avoid
+ * bean name conflict with Spring Session Redis's sessionRepository bean.
  *
  * Constitutional Compliance:
  * - Principle III: Layered Architecture - Repository layer for data access
@@ -20,7 +23,7 @@ import java.util.UUID;
  * - Principle VII: Test-First Development - Implementation follows SessionRepositoryTest
  */
 @Repository
-public interface SessionRepository extends JpaRepository<Session, UUID> {
+public interface IamSessionRepository extends JpaRepository<Session, UUID> {
 
     /**
      * Find session by session token.

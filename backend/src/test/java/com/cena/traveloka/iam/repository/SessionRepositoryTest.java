@@ -38,7 +38,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class SessionRepositoryTest {
 
     @Autowired
-    private SessionRepository sessionRepository;
+    private IamSessionRepository sessionRepository;
 
     @Autowired
     private TestEntityManager entityManager;

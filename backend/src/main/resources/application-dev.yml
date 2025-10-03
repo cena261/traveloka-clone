@@ -86,29 +86,24 @@ minio:
   bucket: images
   external-url: http://localhost:9000
 
-# Keycloak Admin Client Configuration
-keycloak:
-  admin:
-    realm: cena
-    server-url: http://localhost:${KEYCLOAK_HTTP_PORT:8081}
-    client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:admin-cli}
-    client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET:}
-    username: ${KEYCLOAK_ADMIN_USERNAME:admin}
-    password: ${KEYCLOAK_ADMIN_PASSWORD:admin}
-    pool-size: 10
-    connection-timeout: 5000ms
-    socket-timeout: 5000ms
-
 # IAM Module Configuration
 traveloka:
   iam:
     enabled: true
+    jwt:
+      secret: ${JWT_SECRET:traveloka-secret-key-minimum-256-bits-for-hs256-signature-algorithm}
+      access-token-expiration-ms: 3600000  # 1 hour (NFR-002)
+      refresh-token-expiration-ms: 604800000  # 7 days
+      issuer: traveloka-backend
     keycloak:
-      server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8080}
-      realm: ${KEYCLOAK_REALM:traveloka}
-      admin-client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:admin-cli}
+      server-url: http://localhost:${KEYCLOAK_HTTP_PORT:8081}
+      realm: master
+      admin-client-id: admin-cli
       admin-client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET:}
+      admin-username: ${KEYCLOAK_ADMIN:admin}
+      admin-password: ${KEYCLOAK_ADMIN_PASSWORD:admin}
       connection-pool-size: 10
+      connection-timeout: 5000ms
     session:
       max-concurrent-sessions: 5
       session-timeout: 86400s # 24 hours

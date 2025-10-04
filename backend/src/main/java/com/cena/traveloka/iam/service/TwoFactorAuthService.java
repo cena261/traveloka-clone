@@ -381,4 +381,41 @@ public class TwoFactorAuthService {
             twoFactorRepository.save(auth);
         });
     }
+
+    /**
+     * Setup two-factor auth from JWT token.
+     *
+     * @param token JWT token
+     * @return TwoFactorSetupDto
+     */
+    public TwoFactorSetupDto setupTwoFactorAuth(String token) {
+        // TODO: Extract user ID from JWT token
+        // For now, throw exception - needs JwtTokenProvider integration
+        throw new UnsupportedOperationException("setupTwoFactorAuth not yet implemented - requires JWT integration");
+    }
+
+    /**
+     * Verify and activate 2FA from JWT token.
+     *
+     * @param token JWT token
+     * @param code TOTP code
+     */
+    public void verifyAndActivateTwoFactorAuth(String token, String code) {
+        // TODO: Extract user ID from JWT token
+        // For now, throw exception - needs JwtTokenProvider integration
+        throw new UnsupportedOperationException("verifyAndActivateTwoFactorAuth not yet implemented - requires JWT integration");
+    }
+
+    /**
+     * Disable 2FA from JWT token with password or backup code verification.
+     *
+     * @param token JWT token
+     * @param password Current password (optional)
+     * @param backupCode Backup code (optional)
+     */
+    public void disableTwoFactorAuth(String token, String password, String backupCode) {
+        // TODO: Extract user ID from JWT token and verify password or backup code
+        // For now, throw exception - needs JwtTokenProvider integration
+        throw new UnsupportedOperationException("disableTwoFactorAuth not yet implemented - requires JWT integration");
+    }
 }

@@ -352,6 +352,41 @@ public class OAuthService {
     }
 
     /**
+     * Get OAuth authorization URL for provider.
+     *
+     * @param provider OAuth provider (google, facebook, apple)
+     * @return Authorization URL
+     */
+    public String getAuthorizationUrl(String provider) {
+        // TODO: Generate OAuth authorization URL based on provider
+        // For now, return placeholder
+        return "https://" + provider + ".com/oauth/authorize";
+    }
+
+    /**
+     * Handle OAuth callback with authorization code.
+     *
+     * @param provider OAuth provider
+     * @param code Authorization code
+     * @param state CSRF state
+     * @param ipAddress Client IP
+     * @param userAgent User agent
+     * @return AuthResponse with JWT tokens
+     */
+    public AuthResponse handleOAuthCallback(
+            String provider,
+            String code,
+            String state,
+            String ipAddress,
+            String userAgent
+    ) {
+        // TODO: Exchange authorization code for tokens
+        // TODO: Get user info from provider
+        // TODO: Call handleOAuthLogin with user data
+        throw new UnsupportedOperationException("handleOAuthCallback not yet implemented - requires OAuth client configuration");
+    }
+
+    /**
      * Create Spring Security Authentication object.
      *
      * @param user User entity

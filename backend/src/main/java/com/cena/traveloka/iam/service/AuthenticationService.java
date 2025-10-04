@@ -283,6 +283,50 @@ public class AuthenticationService {
     }
 
     /**
+     * Forgot password - send reset email.
+     *
+     * @param request Password reset request
+     */
+    public void forgotPassword(com.cena.traveloka.iam.dto.request.PasswordResetRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + request.getEmail()));
+
+        // TODO: Generate reset token and send email
+        log.info("Password reset requested for user: {}", user.getEmail());
+    }
+
+    /**
+     * Reset password with token.
+     *
+     * @param request Password reset request with token
+     */
+    public void resetPassword(com.cena.traveloka.iam.dto.request.PasswordResetRequest request) {
+        // TODO: Validate token and reset password
+        log.info("Password reset with token");
+    }
+
+    /**
+     * Verify email with token.
+     *
+     * @param request Email verification request
+     */
+    public void verifyEmail(com.cena.traveloka.iam.dto.request.VerifyEmailRequest request) {
+        // TODO: Validate token and verify email
+        log.info("Email verification with token");
+    }
+
+    /**
+     * Change password for authenticated user.
+     *
+     * @param request Change password request
+     * @param token JWT token
+     */
+    public void changePassword(com.cena.traveloka.iam.dto.request.ChangePasswordRequest request, String token) {
+        // TODO: Validate current password and update
+        log.info("Password change request");
+    }
+
+    /**
      * Create Spring Security Authentication object.
      *
      * @param user User entity

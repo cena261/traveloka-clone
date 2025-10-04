@@ -340,4 +340,40 @@ public class SessionService {
     private String generateDeviceId(String userAgent, String ipAddress) {
         return UUID.nameUUIDFromBytes((userAgent + ipAddress).getBytes()).toString();
     }
+
+    /**
+     * Get active sessions from JWT token.
+     *
+     * @param token JWT token
+     * @return List of SessionDto
+     */
+    @Transactional(readOnly = true)
+    public List<SessionDto> getActiveSessions(String token) {
+        // TODO: Extract user ID from JWT token
+        // For now, throw exception - needs JwtTokenProvider integration
+        throw new UnsupportedOperationException("getActiveSessions not yet implemented - requires JWT integration");
+    }
+
+    /**
+     * Terminate session by ID with JWT token verification.
+     *
+     * @param sessionId Session ID
+     * @param token JWT token
+     */
+    public void terminateSessionWithAuth(UUID sessionId, String token) {
+        // TODO: Extract user ID from JWT and verify session ownership
+        // For now, just terminate the session
+        terminateSession(sessionId, "Terminated by user");
+    }
+
+    /**
+     * Terminate all other sessions except current one.
+     *
+     * @param token JWT token of current session
+     */
+    public void terminateAllOtherSessions(String token) {
+        // TODO: Extract user ID from JWT and get current session
+        // For now, throw exception - needs JwtTokenProvider integration
+        throw new UnsupportedOperationException("terminateAllOtherSessions not yet implemented - requires JWT integration");
+    }
 }

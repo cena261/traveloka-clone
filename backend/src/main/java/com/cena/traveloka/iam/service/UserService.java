@@ -287,4 +287,103 @@ public class UserService {
     public boolean existsByUsername(String username) {
         return userRepository.existsByUsername(username);
     }
+
+    /**
+     * Get current user from JWT token.
+     *
+     * @param token JWT token
+     * @return UserDetailDto
+     */
+    @Transactional(readOnly = true)
+    public UserDetailDto getCurrentUser(String token) {
+        // TODO: Extract user ID from JWT token
+        // For now, throw exception - needs JwtTokenProvider integration
+        throw new UnsupportedOperationException("getCurrentUser not yet implemented - requires JWT integration");
+    }
+
+    /**
+     * Update current user profile.
+     *
+     * @param request Update profile request
+     * @param token JWT token
+     * @return Updated UserDetailDto
+     */
+    public UserDetailDto updateCurrentUser(UpdateProfileRequest request, String token) {
+        // TODO: Extract user ID from JWT token
+        // For now, throw exception - needs JwtTokenProvider integration
+        throw new UnsupportedOperationException("updateCurrentUser not yet implemented - requires JWT integration");
+    }
+
+    /**
+     * Get all users with pagination.
+     *
+     * @param pageable Pagination
+     * @return PageResponse of UserDto
+     */
+    @Transactional(readOnly = true)
+    public com.cena.traveloka.common.dto.PageResponse<UserDto> getAllUsers(org.springframework.data.domain.Pageable pageable) {
+        Page<User> usersPage = userRepository.findAll(pageable);
+        List<UserDto> userDtos = usersPage.getContent().stream()
+                .map(userMapper::toDto)
+                .collect(java.util.stream.Collectors.toList());
+
+        return com.cena.traveloka.common.dto.PageResponse.<UserDto>builder()
+                .content(userDtos)
+                .totalElements(usersPage.getTotalElements())
+                .totalPages(usersPage.getTotalPages())
+                .size(usersPage.getSize())
+                .number(usersPage.getNumber())
+                .first(usersPage.isFirst())
+                .last(usersPage.isLast())
+                .build();
+    }
+
+    /**
+     * Get user by ID (returns UserDetailDto).
+     *
+     * @param userId User ID
+     * @return UserDetailDto
+     */
+    @Transactional(readOnly = true)
+    public UserDetailDto getUserById(UUID userId) {
+        return getUserDetail(userId);
+    }
+
+    /**
+     * Lock user account (admin operation).
+     *
+     * @param userId User ID
+     * @param reason Lock reason
+     */
+    public void lockUser(UUID userId, String reason) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+
+        user.setAccountLocked(true);
+        user.setLockReason(reason != null ? reason : "Locked by admin");
+        user.setLockedUntil(null); // Indefinite lock (admin must unlock)
+        user.setUpdatedAt(java.time.OffsetDateTime.now());
+        userRepository.save(user);
+
+        log.info("User locked by admin: {} - Reason: {}", userId, reason);
+    }
+
+    /**
+     * Unlock user account (admin operation).
+     *
+     * @param userId User ID
+     */
+    public void unlockUser(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+
+        user.setAccountLocked(false);
+        user.setLockReason(null);
+        user.setLockedUntil(null);
+        user.setFailedLoginAttempts(0);
+        user.setUpdatedAt(java.time.OffsetDateTime.now());
+        userRepository.save(user);
+
+        log.info("User unlocked by admin: {}", userId);
+    }
 }

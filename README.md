@@ -164,7 +164,8 @@ This project is released under the MIT License, allowing anyone to use, modify, 
 
 ---
 
-*This project represents months of planning and initial development. While it won't reach completion under my stewardship, I hope it serves as a valuable reference or starting point for others interested in building similar systems. The architecture decisions, database design, and module structure reflect industry best practices and could be adapted for various travel or booking platforms.*
-*Nuoc mat anh roi cuoc choi ket thuc*
-— Cena Nguyen
-Original Author & Architect
+*This project represents months of planning and initial development. While it won't reach completion under my stewardship, I hope it serves as a valuable reference or starting point for others interested in building similar systems. The architecture decisions, database design, and module structure reflect industry best practices and could be adapted for various travel or booking platforms.*   
+*Nuoc mat anh roi cuoc choi ket thuc*   
+
+— Cena Nguyen   
+Original Author & Architect   

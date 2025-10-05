@@ -17,25 +17,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
-/**
- * T069-T074: UserController
- * REST API controller for user management operations.
- *
- * Endpoints:
- * - GET /api/v1/users/me (T069)
- * - PUT /api/v1/users/me (T070)
- * - GET /api/v1/users (T071) - Admin only
- * - GET /api/v1/users/{id} (T072) - Admin only
- * - POST /api/v1/users/{id}/lock (T073) - Admin only
- * - POST /api/v1/users/{id}/unlock (T074) - Admin only
- *
- * Constitutional Compliance:
- * - Principle III: Layered Architecture - Controller delegates to service layer
- * - Principle IV: Entity Immutability - Uses DTOs for API contracts
- * - FR-019: User profile viewing and updating
- * - FR-008: Account lockout management
- * - FR-005: Role-based access control
- */
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/users")
@@ -44,12 +25,6 @@ public class UserController {
 
     private final UserService userService;
 
-    /**
-     * T069: Get current user profile (FR-019).
-     *
-     * @param authHeader Authorization header with JWT token
-     * @return ApiResponse with UserDetailDto
-     */
     @GetMapping("/me")
     public ApiResponse<UserDetailDto> getCurrentUser(
             @RequestHeader("Authorization") String authHeader
@@ -65,13 +40,6 @@ public class UserController {
         );
     }
 
-    /**
-     * T070: Update current user profile (FR-019).
-     *
-     * @param request Update profile request
-     * @param authHeader Authorization header with JWT token
-     * @return ApiResponse with updated UserDetailDto
-     */
     @PutMapping("/me")
     public ApiResponse<UserDetailDto> updateCurrentUser(
             @Valid @RequestBody UpdateProfileRequest request,
@@ -88,13 +56,6 @@ public class UserController {
         );
     }
 
-    /**
-     * T071: Get all users with pagination (Admin only).
-     *
-     * @param page Page number (default: 0)
-     * @param size Page size (default: 20, max: 100)
-     * @return ApiResponse with PageResponse of UserDto
-     */
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ApiResponse<PageResponse<UserDto>> getAllUsers(
@@ -103,7 +64,6 @@ public class UserController {
     ) {
         log.info("Get all users request - page: {}, size: {}", page, size);
 
-        // Enforce max page size
         size = Math.min(size, 100);
 
         Pageable pageable = PageRequest.of(page, size);
@@ -115,12 +75,6 @@ public class UserController {
         );
     }
 
-    /**
-     * T072: Get user by ID (Admin only).
-     *
-     * @param id User ID
-     * @return ApiResponse with UserDetailDto
-     */
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ApiResponse<UserDetailDto> getUserById(
@@ -136,13 +90,6 @@ public class UserController {
         );
     }
 
-    /**
-     * T073: Lock user account (Admin only, FR-008).
-     *
-     * @param id User ID to lock
-     * @param reason Lock reason (optional)
-     * @return ApiResponse with success message
-     */
     @PostMapping("/{id}/lock")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ApiResponse<Void> lockUser(
@@ -159,12 +106,6 @@ public class UserController {
         );
     }
 
-    /**
-     * T074: Unlock user account (Admin only, FR-008).
-     *
-     * @param id User ID to unlock
-     * @return ApiResponse with success message
-     */
     @PostMapping("/{id}/unlock")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ApiResponse<Void> unlockUser(
@@ -180,12 +121,6 @@ public class UserController {
         );
     }
 
-    /**
-     * Extract JWT token from Authorization header.
-     *
-     * @param authHeader Authorization header (Bearer token)
-     * @return JWT token string
-     */
     private String extractToken(String authHeader) {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             return authHeader.substring(7);

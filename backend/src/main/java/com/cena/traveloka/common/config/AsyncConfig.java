@@ -17,16 +17,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 
-/**
- * Async configuration with ThreadPoolTaskExecutor.
- * Features:
- * - ThreadPoolTaskExecutor with configurable pool sizes
- * - Custom thread naming and exception handling
- * - Rejected execution policy configuration
- * - Environment-specific pool sizing
- * - Monitoring and metrics support
- * - Graceful shutdown handling
- */
 @Configuration
 @EnableAsync
 @ConditionalOnProperty(name = "app.async.enabled", havingValue = "true", matchIfMissing = true)
@@ -61,33 +51,24 @@ public class AsyncConfig implements AsyncConfigurer {
     @Value("${app.async.rejected-execution-policy:CALLER_RUNS}")
     private String rejectedExecutionPolicy;
 
-    /**
-     * Configure default async task executor
-     * @return configured ThreadPoolTaskExecutor
-     */
     @Bean(name = "taskExecutor")
     @Override
     public Executor getAsyncExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
 
-        // Core pool configuration
         executor.setCorePoolSize(corePoolSize);
         executor.setMaxPoolSize(maxPoolSize);
         executor.setQueueCapacity(queueCapacity);
         executor.setThreadNamePrefix(threadNamePrefix);
 
-        // Thread lifecycle configuration
         executor.setKeepAliveSeconds(keepAliveSeconds);
         executor.setAllowCoreThreadTimeOut(allowCoreThreadTimeOut);
 
-        // Shutdown configuration
         executor.setWaitForTasksToCompleteOnShutdown(waitForTasksToCompleteOnShutdown);
         executor.setAwaitTerminationSeconds(awaitTerminationSeconds);
 
-        // Rejected execution policy
         executor.setRejectedExecutionHandler(getRejectedExecutionHandler());
 
-        // Task decorator for monitoring
         executor.setTaskDecorator(runnable -> () -> {
             String originalThreadName = Thread.currentThread().getName();
             try {
@@ -105,19 +86,11 @@ public class AsyncConfig implements AsyncConfigurer {
         return executor;
     }
 
-    /**
-     * Configure async uncaught exception handler
-     * @return custom AsyncUncaughtExceptionHandler
-     */
     @Override
     public AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
         return new CustomAsyncExceptionHandler();
     }
 
-    /**
-     * Configure additional async executor for email tasks
-     * @return configured ThreadPoolTaskExecutor for email operations
-     */
     @Bean(name = "emailTaskExecutor")
     public AsyncTaskExecutor emailTaskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
@@ -133,10 +106,6 @@ public class AsyncConfig implements AsyncConfigurer {
         return executor;
     }
 
-    /**
-     * Configure additional async executor for notification tasks
-     * @return configured ThreadPoolTaskExecutor for notification operations
-     */
     @Bean(name = "notificationTaskExecutor")
     public AsyncTaskExecutor notificationTaskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
@@ -152,10 +121,6 @@ public class AsyncConfig implements AsyncConfigurer {
         return executor;
     }
 
-    /**
-     * Configure additional async executor for search/indexing tasks
-     * @return configured ThreadPoolTaskExecutor for search operations
-     */
     @Bean(name = "searchTaskExecutor")
     public AsyncTaskExecutor searchTaskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
@@ -171,10 +136,6 @@ public class AsyncConfig implements AsyncConfigurer {
         return executor;
     }
 
-    /**
-     * Configure additional async executor for file processing tasks
-     * @return configured ThreadPoolTaskExecutor for file operations
-     */
     @Bean(name = "fileTaskExecutor")
     public AsyncTaskExecutor fileTaskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
@@ -190,10 +151,6 @@ public class AsyncConfig implements AsyncConfigurer {
         return executor;
     }
 
-    /**
-     * Get rejected execution handler based on configuration
-     * @return configured RejectedExecutionHandler
-     */
     private RejectedExecutionHandler getRejectedExecutionHandler() {
         return switch (rejectedExecutionPolicy.toUpperCase()) {
             case "ABORT" -> new ThreadPoolExecutor.AbortPolicy();
@@ -207,9 +164,6 @@ public class AsyncConfig implements AsyncConfigurer {
         };
     }
 
-    /**
-     * Custom async exception handler for logging and monitoring
-     */
     public static class CustomAsyncExceptionHandler implements AsyncUncaughtExceptionHandler {
 
         private static final Logger logger = LoggerFactory.getLogger(CustomAsyncExceptionHandler.class);
@@ -222,11 +176,6 @@ public class AsyncConfig implements AsyncConfigurer {
                 params != null ? params.length : 0,
                 ex);
 
-            // Additional handling could include:
-            // - Sending alerts
-            // - Recording metrics
-            // - Retrying certain operations
-            // - Notifying monitoring systems
         }
     }
 }

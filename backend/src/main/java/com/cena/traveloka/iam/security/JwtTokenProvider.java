@@ -19,15 +19,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * T046: JwtTokenProvider
- * Utility for generating and validating JWT tokens.
- *
- * Constitutional Compliance:
- * - NFR-002: JWT expiry 1 hour (configurable via environment)
- * - FR-003: Issue authentication tokens with 1-hour expiry
- * - Used by AuthenticationService for token generation
- */
 @Slf4j
 @Component
 public class JwtTokenProvider {
@@ -51,15 +42,6 @@ public class JwtTokenProvider {
         this.jwtDecoder = NimbusJwtDecoder.withSecretKey(secretKey).build();
     }
 
-    /**
-     * Generate JWT access token from Authentication object.
-     * Token includes userId, username, email, and roles.
-     *
-     * @param authentication Spring Security authentication object
-     * @param userId User ID
-     * @param email User email
-     * @return JWT access token string
-     */
     public String generateAccessToken(Authentication authentication, String userId, String email) {
         Instant now = Instant.now();
         Instant expiryDate = now.plusMillis(accessTokenExpirationMs);
@@ -80,13 +62,6 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    /**
-     * Generate JWT refresh token.
-     * Refresh token has longer expiry (7 days) and minimal claims.
-     *
-     * @param userId User ID
-     * @return JWT refresh token string
-     */
     public String generateRefreshToken(String userId) {
         Instant now = Instant.now();
         Instant expiryDate = now.plusMillis(refreshTokenExpirationMs);
@@ -101,12 +76,6 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    /**
-     * Get user ID from JWT token.
-     *
-     * @param token JWT token string
-     * @return User ID (subject)
-     */
     public String getUserIdFromToken(String token) {
         Claims claims = Jwts.parser()
                 .requireIssuer(issuer)
@@ -118,12 +87,6 @@ public class JwtTokenProvider {
         return claims.getSubject();
     }
 
-    /**
-     * Get username from JWT token.
-     *
-     * @param token JWT token string
-     * @return Username
-     */
     public String getUsernameFromToken(String token) {
         Claims claims = Jwts.parser()
                 .requireIssuer(issuer)
@@ -135,12 +98,6 @@ public class JwtTokenProvider {
         return claims.get("username", String.class);
     }
 
-    /**
-     * Get email from JWT token.
-     *
-     * @param token JWT token string
-     * @return User email
-     */
     public String getEmailFromToken(String token) {
         Claims claims = Jwts.parser()
                 .requireIssuer(issuer)
@@ -152,12 +109,6 @@ public class JwtTokenProvider {
         return claims.get("email", String.class);
     }
 
-    /**
-     * Get roles from JWT token.
-     *
-     * @param token JWT token string
-     * @return List of role names
-     */
     @SuppressWarnings("unchecked")
     public List<String> getRolesFromToken(String token) {
         Claims claims = Jwts.parser()
@@ -170,13 +121,6 @@ public class JwtTokenProvider {
         return claims.get("roles", List.class);
     }
 
-    /**
-     * Validate JWT token.
-     * Checks signature, expiration, and issuer.
-     *
-     * @param token JWT token string
-     * @return true if valid, false otherwise
-     */
     public boolean validateToken(String token) {
         try {
             Jwts.parser()
@@ -199,12 +143,6 @@ public class JwtTokenProvider {
         return false;
     }
 
-    /**
-     * Check if JWT token is expired.
-     *
-     * @param token JWT token string
-     * @return true if expired, false otherwise
-     */
     public boolean isTokenExpired(String token) {
         try {
             Claims claims = Jwts.parser()
@@ -223,31 +161,14 @@ public class JwtTokenProvider {
         }
     }
 
-    /**
-     * Decode JWT token using Spring Security JwtDecoder.
-     * Used for integration with Spring Security OAuth2 Resource Server.
-     *
-     * @param token JWT token string
-     * @return Decoded JWT
-     */
     public Jwt decode(String token) {
         return jwtDecoder.decode(token);
     }
 
-    /**
-     * Get token expiration time in milliseconds.
-     *
-     * @return Access token expiration in milliseconds
-     */
     public long getAccessTokenExpirationMs() {
         return accessTokenExpirationMs;
     }
 
-    /**
-     * Get token expiration time in seconds.
-     *
-     * @return Access token expiration in seconds
-     */
     public long getAccessTokenExpirationSeconds() {
         return accessTokenExpirationMs / 1000;
     }

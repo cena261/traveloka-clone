@@ -11,22 +11,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 
-/**
- * T081-T082: OAuthController
- * REST API controller for OAuth authentication operations.
- *
- * Endpoints:
- * - GET /oauth/{provider}/authorize (T081)
- * - GET /oauth/{provider}/callback (T082)
- *
- * Supported providers: google, facebook, apple
- *
- * Constitutional Compliance:
- * - Principle III: Layered Architecture - Controller delegates to service layer
- * - Principle IV: Entity Immutability - Uses DTOs for API contracts
- * - FR-012: OAuth2 integration (Google, Facebook, Apple)
- * - FR-011: Keycloak acts as OAuth broker
- */
 @Slf4j
 @RestController
 @RequestMapping("/oauth")
@@ -41,14 +25,6 @@ public class OAuthController {
     @Value("${app.frontend.url:http://localhost:3000}")
     private String frontendUrl;
 
-    /**
-     * T081: Initiate OAuth authorization flow (FR-012).
-     * Redirects user to OAuth provider's authorization page.
-     *
-     * @param provider OAuth provider (google, facebook, apple)
-     * @param response HTTP response for redirect
-     * @throws IOException if redirect fails
-     */
     @GetMapping("/{provider}/authorize")
     public void initiateOAuthFlow(
             @PathVariable String provider,
@@ -56,31 +32,15 @@ public class OAuthController {
     ) throws IOException {
         log.info("Initiating OAuth flow for provider: {}", provider);
 
-        // Validate provider
         if (!isValidProvider(provider)) {
             throw new IllegalArgumentException("Unsupported OAuth provider: " + provider);
         }
 
-        // Get OAuth authorization URL from service
         String authorizationUrl = oauthService.getAuthorizationUrl(provider);
 
-        // Redirect to OAuth provider
         response.sendRedirect(authorizationUrl);
     }
 
-    /**
-     * T082: Handle OAuth callback (FR-012).
-     * Processes authorization code and completes authentication.
-     *
-     * @param provider OAuth provider (google, facebook, apple)
-     * @param code Authorization code from OAuth provider
-     * @param state State parameter for CSRF protection
-     * @param error Error code if authorization failed
-     * @param errorDescription Error description if authorization failed
-     * @param request HTTP request for IP and user agent extraction
-     * @param response HTTP response for redirect
-     * @throws IOException if redirect fails
-     */
     @GetMapping("/{provider}/callback")
     public void handleOAuthCallback(
             @PathVariable String provider,
@@ -93,7 +53,6 @@ public class OAuthController {
     ) throws IOException {
         log.info("OAuth callback received for provider: {}", provider);
 
-        // Check for errors from OAuth provider
         if (error != null) {
             log.error("OAuth error from provider {}: {} - {}", provider, error, errorDescription);
             String errorRedirectUrl = String.format("%s/auth/oauth/error?error=%s&description=%s",
@@ -102,7 +61,6 @@ public class OAuthController {
             return;
         }
 
-        // Validate authorization code
         if (code == null || code.isBlank()) {
             log.error("Missing authorization code in OAuth callback");
             String errorRedirectUrl = String.format("%s/auth/oauth/error?error=missing_code", frontendUrl);
@@ -111,11 +69,9 @@ public class OAuthController {
         }
 
         try {
-            // Extract client information
             String ipAddress = getClientIp(request);
             String userAgent = request.getHeader("User-Agent");
 
-            // Process OAuth callback and authenticate user
             AuthResponse authResponse = oauthService.handleOAuthCallback(
                     provider,
                     code,
@@ -124,7 +80,6 @@ public class OAuthController {
                     userAgent
             );
 
-            // Redirect to frontend with tokens
             String successRedirectUrl = String.format(
                     "%s/auth/oauth/success?access_token=%s&refresh_token=%s&token_type=%s&expires_in=%d",
                     frontendUrl,
@@ -149,12 +104,6 @@ public class OAuthController {
         }
     }
 
-    /**
-     * Validate OAuth provider name.
-     *
-     * @param provider Provider name
-     * @return true if provider is supported
-     */
     private boolean isValidProvider(String provider) {
         return provider != null && (
                 provider.equalsIgnoreCase("google") ||
@@ -163,13 +112,6 @@ public class OAuthController {
         );
     }
 
-    /**
-     * Get client IP address from HTTP request.
-     * Handles X-Forwarded-For header for proxied requests.
-     *
-     * @param request HTTP request
-     * @return Client IP address
-     */
     private String getClientIp(HttpServletRequest request) {
         String xForwardedFor = request.getHeader("X-Forwarded-For");
         if (xForwardedFor != null && !xForwardedFor.isEmpty()) {

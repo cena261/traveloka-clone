@@ -21,17 +21,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Security configuration with Keycloak JWT resource server.
- * Features:
- * - JWT-based authentication with Keycloak integration
- * - Role-based access control with method-level security
- * - CORS configuration for cross-origin requests
- * - Stateless session management
- * - Public endpoint configuration
- * - Authority mapping from JWT claims
- * - Environment-specific security settings
- */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true, securedEnabled = true, jsr250Enabled = true)
@@ -71,41 +60,37 @@ public class SecurityConfig {
     @Value("${app.security.cors.max-age:3600}")
     private long corsMaxAge;
 
-    /**
-     * Configure security filter chain
-     * @param http HttpSecurity configuration
-     * @return configured SecurityFilterChain
-     * @throws Exception if configuration fails
-     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            // Disable CSRF for stateless API
             .csrf(AbstractHttpConfigurer::disable)
 
-            // Configure CORS
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-            // Configure session management (stateless)
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-            // Configure authorization rules
             .authorizeHttpRequests(authz -> authz
-                // Public endpoints
                 .requestMatchers(publicEndpoints.toArray(new String[0])).permitAll()
 
-                // Admin endpoints require ADMIN role
+                .requestMatchers(
+                    "/api/v1/auth/register",
+                    "/api/v1/auth/login",
+                    "/api/v1/auth/refresh",
+                    "/api/v1/auth/forgot-password",
+                    "/api/v1/auth/reset-password",
+                    "/api/v1/auth/verify-email",
+                    "/oauth/*/authorize",
+                    "/oauth/*/callback"
+                ).permitAll()
+
                 .requestMatchers(adminEndpoints.toArray(new String[0])).hasRole("ADMIN")
 
-                // API endpoints require authentication
                 .requestMatchers("/api/**").authenticated()
 
-                // All other requests require authentication
                 .anyRequest().authenticated()
             )
 
-            // Configure OAuth2 Resource Server with JWT
             .oauth2ResourceServer(oauth2 -> oauth2
                 .jwt(jwt -> jwt
                     .decoder(jwtDecoder())
@@ -116,10 +101,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-    /**
-     * Configure JWT decoder for Keycloak
-     * @return configured JwtDecoder
-     */
     @Bean
     public JwtDecoder jwtDecoder() {
         if (jwkSetUri != null && !jwkSetUri.trim().isEmpty()) {
@@ -129,18 +110,12 @@ public class SecurityConfig {
         }
     }
 
-    /**
-     * Configure JWT authentication converter for authority mapping
-     * @return configured JwtAuthenticationConverter
-     */
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter authoritiesConverter = new JwtGrantedAuthoritiesConverter();
 
-        // Configure authority claim name (e.g., "realm_access.roles" for Keycloak)
         authoritiesConverter.setAuthoritiesClaimName(authoritiesClaimName);
 
-        // Configure authority prefix (e.g., "ROLE_")
         authoritiesConverter.setAuthorityPrefix(authorityPrefix);
 
         JwtAuthenticationConverter jwtConverter = new JwtAuthenticationConverter();
@@ -149,34 +124,24 @@ public class SecurityConfig {
         return jwtConverter;
     }
 
-    /**
-     * Configure CORS settings
-     * @return configured CorsConfigurationSource
-     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Set allowed origins
         configuration.setAllowedOriginPatterns(allowedOrigins);
 
-        // Set allowed methods
         configuration.setAllowedMethods(allowedMethods);
 
-        // Set allowed headers
         if (allowedHeaders.contains("*")) {
             configuration.addAllowedHeader("*");
         } else {
             configuration.setAllowedHeaders(allowedHeaders);
         }
 
-        // Set credentials support
         configuration.setAllowCredentials(allowCredentials);
 
-        // Set preflight max age
         configuration.setMaxAge(corsMaxAge);
 
-        // Expose common headers
         configuration.setExposedHeaders(Arrays.asList(
             "Authorization", "Content-Type", "X-Requested-With", "Accept",
             "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers",

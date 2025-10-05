@@ -7,15 +7,6 @@ import com.cena.traveloka.iam.dto.response.UserDto;
 import com.cena.traveloka.iam.entity.User;
 import org.mapstruct.*;
 
-/**
- * T042: UserMapper
- * MapStruct mapper for User entity ↔ DTOs conversion.
- *
- * Constitutional Compliance:
- * - Principle IV: Entity Immutability - Mapper separates entities from DTOs
- * - Principle X: Code Quality - MapStruct for type-safe mapping
- * - Used by AuthenticationService, UserService
- */
 @Mapper(
     componentModel = "spring",
     uses = {RoleMapper.class, ProfileMapper.class},
@@ -24,35 +15,12 @@ import org.mapstruct.*;
 )
 public interface UserMapper {
 
-    /**
-     * Convert User entity to basic UserDto.
-     * Used in login responses, user lists.
-     *
-     * @param user User entity
-     * @return UserDto with basic user information
-     */
     UserDto toDto(User user);
 
-    /**
-     * Convert User entity to detailed UserDetailDto.
-     * Includes roles and profile information.
-     * Used in GET /api/v1/users/me.
-     *
-     * @param user User entity
-     * @return UserDetailDto with complete user information
-     */
     @Mapping(target = "roles", source = "roles")
     @Mapping(target = "profile", source = "profile")
     UserDetailDto toDetailDto(User user);
 
-    /**
-     * Convert RegisterRequest to User entity.
-     * Used during user registration (FR-001).
-     * Note: password fields in RegisterRequest are NOT mapped to User entity (handled by Keycloak).
-     *
-     * @param request Registration request
-     * @return User entity (without password - handled by Keycloak)
-     */
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "keycloakId", ignore = true)
     @Mapping(target = "displayName", expression = "java(request.getFirstName() + \" \" + request.getLastName())")
@@ -85,14 +53,6 @@ public interface UserMapper {
     @Mapping(target = "roles", ignore = true)
     User toEntity(RegisterRequest request);
 
-    /**
-     * Update User entity from UpdateProfileRequest.
-     * Used in PUT /api/v1/users/me (FR-018, FR-019).
-     * Only updates non-null fields.
-     *
-     * @param request Update profile request
-     * @param user Existing user entity to update
-     */
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "keycloakId", ignore = true)
     @Mapping(target = "username", ignore = true)
@@ -127,15 +87,6 @@ public interface UserMapper {
     @Mapping(target = "roles", ignore = true)
     void updateFromRequest(UpdateProfileRequest request, @MappingTarget User user);
 
-    /**
-     * Helper method to build display name.
-     * Uses new values if provided, otherwise keeps existing.
-     *
-     * @param newFirstName New first name (nullable)
-     * @param newLastName New last name (nullable)
-     * @param existingUser Existing user entity
-     * @return Updated display name
-     */
     default String buildDisplayName(String newFirstName, String newLastName, User existingUser) {
         String firstName = newFirstName != null ? newFirstName : existingUser.getFirstName();
         String lastName = newLastName != null ? newLastName : existingUser.getLastName();

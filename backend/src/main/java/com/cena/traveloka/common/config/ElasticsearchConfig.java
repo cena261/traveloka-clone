@@ -24,17 +24,6 @@ import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.util.Arrays;
 
-/**
- * Elasticsearch configuration with Java client for Elasticsearch 8.x.
- * Features:
- * - Elasticsearch 8.x Java client configuration
- * - Connection pooling and timeout settings
- * - SSL/TLS support with certificate validation options
- * - Authentication support (username/password)
- * - Repository scanning enabled
- * - Environment-specific connection settings
- * - Health check and sniffing configuration
- */
 @Configuration
 @EnableElasticsearchRepositories(basePackages = "com.cena.traveloka")
 @ConditionalOnProperty(name = "app.elasticsearch.enabled", havingValue = "true", matchIfMissing = true)
@@ -79,10 +68,6 @@ public class ElasticsearchConfig {
     @Value("${app.elasticsearch.sniffing.delay-after-failure:1m}")
     private Duration sniffingDelayAfterFailure;
 
-    /**
-     * Configure Elasticsearch REST client
-     * @return configured RestClient
-     */
     @Bean
     public RestClient elasticsearchRestClient() {
         HttpHost[] hosts = Arrays.stream(uris)
@@ -91,21 +76,18 @@ public class ElasticsearchConfig {
 
         RestClientBuilder builder = RestClient.builder(hosts);
 
-        // Configure timeouts
         builder.setRequestConfigCallback(requestConfigBuilder ->
             requestConfigBuilder
                 .setConnectTimeout((int) connectionTimeout.toMillis())
                 .setSocketTimeout((int) socketTimeout.toMillis())
         );
 
-        // Configure HTTP client
         builder.setHttpClientConfigCallback(httpClientBuilder -> {
             httpClientBuilder
                 .setMaxConnTotal(maxConnections)
                 .setMaxConnPerRoute(maxConnectionsPerRoute)
                 .setKeepAliveStrategy((response, context) -> keepAliveStrategy.toMillis());
 
-            // Configure authentication if provided
             if (username != null && !username.trim().isEmpty() &&
                 password != null && !password.trim().isEmpty()) {
                 CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
@@ -114,11 +96,9 @@ public class ElasticsearchConfig {
                 httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
             }
 
-            // Configure SSL if enabled
             if (sslEnabled) {
                 try {
                     if (!verifyCertificates) {
-                        // Create a trust-all SSL context (for development/testing only)
                         SSLContext sslContext = SSLContext.getInstance("TLS");
                         sslContext.init(null, new TrustManager[]{
                             new X509TrustManager() {
@@ -144,21 +124,11 @@ public class ElasticsearchConfig {
         return builder.build();
     }
 
-    /**
-     * Configure Elasticsearch transport
-     * @param restClient REST client
-     * @return configured ElasticsearchTransport
-     */
     @Bean
     public ElasticsearchTransport elasticsearchTransport(RestClient restClient) {
         return new RestClientTransport(restClient, new JacksonJsonpMapper());
     }
 
-    /**
-     * Configure Elasticsearch client
-     * @param transport Elasticsearch transport
-     * @return configured ElasticsearchClient
-     */
     @Bean
     public ElasticsearchClient elasticsearchClient(ElasticsearchTransport transport) {
         return new ElasticsearchClient(transport);

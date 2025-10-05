@@ -15,16 +15,6 @@ import jakarta.annotation.PostConstruct;
 import java.time.Duration;
 import java.util.List;
 
-/**
- * MinIO configuration with auto-bucket creation and S3-compatible setup.
- * Features:
- * - MinIO client configuration with S3 compatibility
- * - Automatic bucket creation on startup
- * - Configurable bucket policies (public/private)
- * - Connection timeout and retry settings
- * - Environment-specific endpoint configuration
- * - Health check and monitoring support
- */
 @Configuration
 @ConditionalOnProperty(name = "app.minio.enabled", havingValue = "true", matchIfMissing = true)
 public class MinIOConfig {
@@ -69,10 +59,6 @@ public class MinIOConfig {
 
     private MinioClient minioClient;
 
-    /**
-     * Configure MinIO client with S3-compatible settings
-     * @return configured MinioClient
-     */
     @Bean
     public MinioClient minioClient() {
         try {
@@ -82,7 +68,6 @@ public class MinIOConfig {
                 .region(region)
                 .build();
 
-            // Set timeouts
             minioClient.setTimeout(
                 connectionTimeout.toMillis(),
                 writeTimeout.toMillis(),
@@ -98,9 +83,6 @@ public class MinIOConfig {
         }
     }
 
-    /**
-     * Initialize buckets after MinIO client is configured
-     */
     @PostConstruct
     public void initializeBuckets() {
         if (!autoCreateBuckets) {
@@ -125,10 +107,6 @@ public class MinIOConfig {
         }
     }
 
-    /**
-     * Create bucket if it doesn't exist
-     * @param bucketName name of the bucket to create
-     */
     private void createBucketIfNotExists(String bucketName) {
         try {
             boolean bucketExists = minioClient.bucketExists(
@@ -154,14 +132,9 @@ public class MinIOConfig {
         }
     }
 
-    /**
-     * Configure bucket policy based on public/private settings
-     * @param bucketName name of the bucket to configure
-     */
     private void configureBucketPolicy(String bucketName) {
         try {
             if (publicBuckets.contains(bucketName)) {
-                // Set public read policy for public buckets
                 String publicReadPolicy = """
                     {
                         "Version": "2012-10-17",
@@ -184,52 +157,29 @@ public class MinIOConfig {
                 );
                 logger.info("Set public read policy for bucket: {}", bucketName);
             } else {
-                // Private buckets don't need explicit policy (default is private)
                 logger.debug("Bucket {} configured as private (default)", bucketName);
             }
         } catch (Exception e) {
             logger.warn("Failed to set policy for bucket: {} - {}", bucketName, e.getMessage());
-            // Don't throw exception here as the bucket is still usable
         }
     }
 
-    /**
-     * Get the default bucket name
-     * @return default bucket name
-     */
     public String getDefaultBucket() {
         return defaultBucket;
     }
 
-    /**
-     * Get list of configured bucket names
-     * @return list of bucket names
-     */
     public List<String> getBucketNames() {
         return bucketNames;
     }
 
-    /**
-     * Check if a bucket is configured as public
-     * @param bucketName bucket name to check
-     * @return true if bucket is public
-     */
     public boolean isPublicBucket(String bucketName) {
         return publicBuckets.contains(bucketName);
     }
 
-    /**
-     * Get the MinIO endpoint URL
-     * @return endpoint URL
-     */
     public String getEndpoint() {
         return endpoint;
     }
 
-    /**
-     * Get the configured region
-     * @return region name
-     */
     public String getRegion() {
         return region;
     }

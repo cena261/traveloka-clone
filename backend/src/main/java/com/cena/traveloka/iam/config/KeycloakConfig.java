@@ -12,17 +12,6 @@ import org.springframework.context.annotation.Configuration;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 
-/**
- * T050: KeycloakConfig
- * Configuration for Keycloak Admin Client.
- *
- * Constitutional Compliance:
- * - FR-002: Keycloak integration for authentication
- * - FR-011: Bidirectional sync with identity provider
- * - NFR-004: Graceful handling of Keycloak unavailability
- * - Provides Keycloak admin client for user management
- * - Used by KeycloakSyncService
- */
 @Slf4j
 @Configuration
 public class KeycloakConfig {
@@ -52,12 +41,6 @@ public class KeycloakConfig {
     @DurationUnit(ChronoUnit.MILLIS)
     private Duration connectionTimeout;
 
-    /**
-     * Create Keycloak admin client bean.
-     * Uses client credentials (client_id + client_secret) or password grant.
-     *
-     * @return Keycloak admin client instance
-     */
     @Bean
     public Keycloak keycloakAdminClient() {
         log.info("Initializing Keycloak admin client: server={}, realm={}, clientId={}",
@@ -69,13 +52,11 @@ public class KeycloakConfig {
                     .realm(realm)
                     .clientId(clientId);
 
-            // Use client credentials if client secret is provided
             if (clientSecret != null && !clientSecret.isEmpty()) {
                 builder.grantType(OAuth2Constants.CLIENT_CREDENTIALS)
                         .clientSecret(clientSecret);
                 log.info("Using client credentials grant for Keycloak authentication");
             } else {
-                // Fallback to password grant with admin username/password
                 builder.grantType(OAuth2Constants.PASSWORD)
                         .username(username)
                         .password(password);
@@ -84,7 +65,6 @@ public class KeycloakConfig {
 
             Keycloak keycloak = builder.build();
 
-            // Test connection
             keycloak.serverInfo().getInfo();
             log.info("Keycloak admin client initialized successfully");
 
@@ -93,62 +73,30 @@ public class KeycloakConfig {
             log.error("Failed to initialize Keycloak admin client: {}", ex.getMessage());
             log.warn("Keycloak integration will not be available. Application will continue with limited functionality.");
 
-            // Return null to allow application to start even if Keycloak is unavailable
-            // Services using Keycloak should check for null and handle gracefully
             return null;
         }
     }
 
-    /**
-     * Get Keycloak server URL.
-     *
-     * @return Server URL
-     */
     public String getServerUrl() {
         return serverUrl;
     }
 
-    /**
-     * Get Keycloak realm name.
-     *
-     * @return Realm name
-     */
     public String getRealm() {
         return realm;
     }
 
-    /**
-     * Get Keycloak client ID.
-     *
-     * @return Client ID
-     */
     public String getClientId() {
         return clientId;
     }
 
-    /**
-     * Get connection pool size.
-     *
-     * @return Pool size
-     */
     public int getPoolSize() {
         return poolSize;
     }
 
-    /**
-     * Get connection timeout in milliseconds.
-     *
-     * @return Connection timeout in milliseconds
-     */
     public long getConnectionTimeoutMillis() {
         return connectionTimeout.toMillis();
     }
 
-    /**
-     * Get connection timeout as Duration.
-     *
-     * @return Connection timeout Duration
-     */
     public Duration getConnectionTimeout() {
         return connectionTimeout;
     }

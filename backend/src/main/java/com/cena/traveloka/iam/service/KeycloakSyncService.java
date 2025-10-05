@@ -23,16 +23,6 @@ import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.*;
 
-/**
- * T056: KeycloakSyncService
- * Service for bidirectional synchronization with Keycloak.
- *
- * Constitutional Compliance:
- * - FR-002: Keycloak integration for authentication
- * - FR-011: Bidirectional sync with identity provider
- * - NFR-004: Graceful handling of Keycloak unavailability with retry logic
- * - Principle III: Layered Architecture - Business logic in service layer
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -49,13 +39,6 @@ public class KeycloakSyncService {
     private static final int MAX_RETRIES = 3;
     private static final long RETRY_DELAY_MS = 1000;
 
-    /**
-     * Create user in Keycloak (FR-011).
-     *
-     * @param user User entity
-     * @param password Plain text password
-     * @return User with Keycloak ID
-     */
     public User createUserInKeycloak(User user, String password) {
         if (!isKeycloakAvailable()) {
             log.warn("Keycloak is not available. Skipping user creation in Keycloak.");
@@ -74,14 +57,12 @@ public class KeycloakSyncService {
             userRep.setEnabled(true);
             userRep.setEmailVerified(user.getEmailVerified());
 
-            // Create user
             Response response = usersResource.create(userRep);
 
             if (response.getStatus() == 201) {
                 URI location = response.getLocation();
                 String keycloakId = location.getPath().replaceAll(".*/([^/]+)$", "$1");
 
-                // Set password
                 UserResource userResource = usersResource.get(keycloakId);
                 CredentialRepresentation credential = new CredentialRepresentation();
                 credential.setType(CredentialRepresentation.PASSWORD);
@@ -89,7 +70,6 @@ public class KeycloakSyncService {
                 credential.setTemporary(false);
                 userResource.resetPassword(credential);
 
-                // Update user with Keycloak ID
                 user.setKeycloakId(UUID.fromString(keycloakId));
                 userRepository.save(user);
 
@@ -101,12 +81,6 @@ public class KeycloakSyncService {
         }, "create user in Keycloak");
     }
 
-    /**
-     * Sync user from Keycloak to database (FR-011).
-     *
-     * @param keycloakId Keycloak user ID
-     * @return Synced User
-     */
     public User syncUserFromKeycloak(UUID keycloakId) {
         if (!isKeycloakAvailable()) {
             throw new RuntimeException("Keycloak is not available");
@@ -117,11 +91,9 @@ public class KeycloakSyncService {
             UserResource userResource = realmResource.users().get(keycloakId.toString());
             UserRepresentation userRep = userResource.toRepresentation();
 
-            // Find or create user in database
             User user = userRepository.findByKeycloakId(keycloakId)
                     .orElseThrow(() -> new RuntimeException("User not found with Keycloak ID: " + keycloakId));
 
-            // Update user from Keycloak
             user.setUsername(userRep.getUsername());
             user.setEmail(userRep.getEmail());
             user.setFirstName(userRep.getFirstName());
@@ -136,11 +108,6 @@ public class KeycloakSyncService {
         }, "sync user from Keycloak");
     }
 
-    /**
-     * Update user in Keycloak (FR-011).
-     *
-     * @param user User entity
-     */
     public void updateUserInKeycloak(User user) {
         if (!isKeycloakAvailable() || user.getKeycloakId() == null) {
             log.warn("Keycloak unavailable or user has no Keycloak ID. Skipping update.");
@@ -165,11 +132,6 @@ public class KeycloakSyncService {
         }, "update user in Keycloak");
     }
 
-    /**
-     * Delete user from Keycloak.
-     *
-     * @param keycloakId Keycloak user ID
-     */
     public void deleteUserFromKeycloak(UUID keycloakId) {
         if (!isKeycloakAvailable()) {
             log.warn("Keycloak is not available. Skipping user deletion in Keycloak.");
@@ -186,12 +148,6 @@ public class KeycloakSyncService {
         }, "delete user from Keycloak");
     }
 
-    /**
-     * Assign role to user in Keycloak.
-     *
-     * @param keycloakId Keycloak user ID
-     * @param roleName Role name
-     */
     public void assignRoleToUser(UUID keycloakId, String roleName) {
         if (!isKeycloakAvailable()) {
             log.warn("Keycloak is not available. Skipping role assignment.");
@@ -212,12 +168,6 @@ public class KeycloakSyncService {
         }, "assign role to user in Keycloak");
     }
 
-    /**
-     * Remove role from user in Keycloak.
-     *
-     * @param keycloakId Keycloak user ID
-     * @param roleName Role name
-     */
     public void removeRoleFromUser(UUID keycloakId, String roleName) {
         if (!isKeycloakAvailable()) {
             log.warn("Keycloak is not available. Skipping role removal.");
@@ -238,11 +188,6 @@ public class KeycloakSyncService {
         }, "remove role from user in Keycloak");
     }
 
-    /**
-     * Sync all users from Keycloak to database.
-     *
-     * @return Number of users synced
-     */
     public int syncAllUsersFromKeycloak() {
         if (!isKeycloakAvailable()) {
             log.warn("Keycloak is not available. Skipping bulk user sync.");
@@ -280,30 +225,14 @@ public class KeycloakSyncService {
         }, "sync all users from Keycloak");
     }
 
-    /**
-     * Enable user in Keycloak.
-     *
-     * @param keycloakId Keycloak user ID
-     */
     public void enableUserInKeycloak(UUID keycloakId) {
         updateUserEnabledStatus(keycloakId, true);
     }
 
-    /**
-     * Disable user in Keycloak.
-     *
-     * @param keycloakId Keycloak user ID
-     */
     public void disableUserInKeycloak(UUID keycloakId) {
         updateUserEnabledStatus(keycloakId, false);
     }
 
-    /**
-     * Reset password in Keycloak.
-     *
-     * @param keycloakId Keycloak user ID
-     * @param newPassword New password
-     */
     public void resetPasswordInKeycloak(UUID keycloakId, String newPassword) {
         if (!isKeycloakAvailable()) {
             log.warn("Keycloak is not available. Skipping password reset.");
@@ -326,16 +255,10 @@ public class KeycloakSyncService {
         }, "reset password in Keycloak");
     }
 
-    /**
-     * Check if Keycloak is available (NFR-004).
-     *
-     * @return true if Keycloak client is not null
-     */
     public boolean isKeycloakAvailable() {
         return keycloak != null;
     }
 
-    // Private helper methods
 
     private void updateUserEnabledStatus(UUID keycloakId, boolean enabled) {
         if (!isKeycloakAvailable()) {
@@ -356,14 +279,6 @@ public class KeycloakSyncService {
         }, "update user enabled status in Keycloak");
     }
 
-    /**
-     * Execute operation with retry logic (NFR-004).
-     *
-     * @param operation Operation to execute
-     * @param operationName Operation name for logging
-     * @param <T> Return type
-     * @return Result of operation
-     */
     private <T> T executeWithRetry(KeycloakOperation<T> operation, String operationName) {
         int attempts = 0;
         Exception lastException = null;

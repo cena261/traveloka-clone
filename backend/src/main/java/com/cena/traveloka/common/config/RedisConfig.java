@@ -14,16 +14,6 @@ import redis.clients.jedis.JedisPoolConfig;
 
 import java.time.Duration;
 
-/**
- * Redis configuration with Jedis connection factory.
- * Features:
- * - Jedis connection factory with optimized pool settings
- * - Manual cache eviction support
- * - JSON serialization for complex objects
- * - String serialization for keys
- * - Environment-specific connection settings
- * - Connection pool optimization for high throughput
- */
 @Configuration
 @ConditionalOnProperty(name = "app.redis.enabled", havingValue = "true", matchIfMissing = true)
 public class RedisConfig {
@@ -82,13 +72,8 @@ public class RedisConfig {
     @Value("${app.redis.pool.block-when-exhausted:true}")
     private boolean blockWhenExhausted;
 
-    /**
-     * Configure Jedis connection factory with optimized pool settings
-     * @return configured JedisConnectionFactory
-     */
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
-        // Redis standalone configuration
         RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration();
         redisConfig.setHostName(host);
         redisConfig.setPort(port);
@@ -102,56 +87,43 @@ public class RedisConfig {
             redisConfig.setPassword(password);
         }
 
-        // Jedis pool configuration
         JedisPoolConfig poolConfig = new JedisPoolConfig();
         poolConfig.setMaxTotal(maxTotal);
         poolConfig.setMaxIdle(maxIdle);
         poolConfig.setMinIdle(minIdle);
         poolConfig.setMaxWait(Duration.ofMillis(maxWaitMillis));
 
-        // Connection validation
         poolConfig.setTestOnBorrow(testOnBorrow);
         poolConfig.setTestOnReturn(testOnReturn);
         poolConfig.setTestWhileIdle(testWhileIdle);
 
-        // Eviction policy
         poolConfig.setTimeBetweenEvictionRuns(Duration.ofMillis(timeBetweenEvictionRuns));
         poolConfig.setNumTestsPerEvictionRun(numTestsPerEvictionRun);
         poolConfig.setMinEvictableIdleTime(Duration.ofMillis(minEvictableIdleTime));
         poolConfig.setSoftMinEvictableIdleTime(Duration.ofMillis(softMinEvictableIdleTime));
         poolConfig.setBlockWhenExhausted(blockWhenExhausted);
 
-        // Create Jedis connection factory using Spring Boot 3 approach
         JedisConnectionFactory jedisConnectionFactory = new JedisConnectionFactory(redisConfig);
         jedisConnectionFactory.setTimeout((int) timeout.toMillis());
 
         return jedisConnectionFactory;
     }
 
-    /**
-     * Configure RedisTemplate with JSON serialization
-     * @param connectionFactory Redis connection factory
-     * @return configured RedisTemplate
-     */
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
 
-        // String serializer for keys
         StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
         template.setKeySerializer(stringRedisSerializer);
         template.setHashKeySerializer(stringRedisSerializer);
 
-        // JSON serializer for values
         GenericJackson2JsonRedisSerializer jsonRedisSerializer = new GenericJackson2JsonRedisSerializer();
         template.setValueSerializer(jsonRedisSerializer);
         template.setHashValueSerializer(jsonRedisSerializer);
 
-        // Enable transaction support
         template.setEnableTransactionSupport(true);
 
-        // Set default serializer
         template.setDefaultSerializer(jsonRedisSerializer);
 
         template.afterPropertiesSet();

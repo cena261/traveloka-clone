@@ -40,18 +40,15 @@ public class User {
     @Column(nullable = false, unique = true, length = 100)
     String username;
 
-    // common.email domain -> String
     @Column(nullable = false, unique = true)
     String email;
 
-    // common.phone -> String
     String phone;
 
     @Column(name="first_name", length = 100) String firstName;
     @Column(name="last_name", length = 100) String lastName;
     @Column(name="display_name", length = 200) String displayName;
 
-    // common.url -> String
     @Column(name="avatar_url") String avatarUrl;
 
     LocalDate dateOfBirth;
@@ -59,7 +56,6 @@ public class User {
     @Enumerated(EnumType.STRING)
     Gender gender;
 
-    // country/language/currency -> String Ä‘á»ƒ linh hoáº¡t i18n
     @Column(name="nationality", length = 2) String nationality;
     @Column(name="preferred_language", length = 2) String preferredLanguage = "en";
     @Column(name="preferred_currency", length = 3) String preferredCurrency = "USD";
@@ -78,7 +74,6 @@ public class User {
     OffsetDateTime lockedUntil;
 
     OffsetDateTime lastLoginAt;
-    // INET -> String
     @Column(name="last_login_ip") String lastLoginIp;
     Integer loginCount = 0;
     Integer failedLoginAttempts = 0;
@@ -95,7 +90,6 @@ public class User {
     OffsetDateTime deletedAt;
     String deletedBy;
 
-    // Relationships
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     UserProfile profile;
 

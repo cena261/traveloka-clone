@@ -20,7 +20,7 @@ spring:
       ddl-auto: validate
       naming:
         implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
-        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
     open-in-view: false
 #    database-platform: org.hibernate.dialect.PostgreSQLDialect
     properties:
@@ -279,7 +279,6 @@ traveloka:
       default-ttl: 1800
       max-entries: 10000
 
-# Resilience4j Configuration (T084 - Keycloak Retry)
 resilience4j:
   retry:
     instances:

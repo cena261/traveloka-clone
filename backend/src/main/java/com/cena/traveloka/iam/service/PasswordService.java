@@ -15,15 +15,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-/**
- * T051: PasswordService
- * Service for password management operations.
- *
- * Constitutional Compliance:
- * - NFR-001: BCrypt password hashing with 12 rounds
- * - FR-009: Password reset with time-limited tokens
- * - Principle III: Layered Architecture - Business logic in service layer
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -35,46 +26,19 @@ public class PasswordService {
     private final PasswordResetTokenRepository tokenRepository;
     private final KeycloakSyncService keycloakSyncService;
 
-    /**
-     * Password complexity regex (NFR-001):
-     * - Minimum 8 characters
-     * - At least 1 uppercase letter
-     * - At least 1 lowercase letter
-     * - At least 1 number
-     * - At least 1 special character
-     */
     private static final Pattern PASSWORD_PATTERN = Pattern.compile(
             "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#])[A-Za-z\\d@$!%*?&#]{8,}$"
     );
 
-    /**
-     * Hash password using BCrypt (NFR-001).
-     *
-     * @param plainPassword Plain text password
-     * @return BCrypt hashed password
-     */
     public String hashPassword(String plainPassword) {
         log.debug("Hashing password");
         return passwordEncoder.encode(plainPassword);
     }
 
-    /**
-     * Verify password against hash.
-     *
-     * @param plainPassword Plain text password
-     * @param hashedPassword BCrypt hashed password
-     * @return true if password matches
-     */
     public boolean verifyPassword(String plainPassword, String hashedPassword) {
         return passwordEncoder.matches(plainPassword, hashedPassword);
     }
 
-    /**
-     * Validate password complexity (NFR-001).
-     *
-     * @param password Password to validate
-     * @return true if password meets complexity requirements
-     */
     public boolean validatePasswordComplexity(String password) {
         if (password == null || password.length() < 8) {
             return false;
@@ -82,18 +46,10 @@ public class PasswordService {
         return PASSWORD_PATTERN.matcher(password).matches();
     }
 
-    /**
-     * Create password reset token (FR-009).
-     * Token expires in 1 hour.
-     *
-     * @param userId User ID
-     * @return PasswordResetToken
-     */
     public PasswordResetToken createPasswordResetToken(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
 
-        // Invalidate old unused tokens - delete them from the list
         tokenRepository.findByUserIdAndUsedFalse(userId).forEach(tokenRepository::delete);
 
         PasswordResetToken token = PasswordResetToken.builder()
@@ -110,12 +66,6 @@ public class PasswordService {
         return saved;
     }
 
-    /**
-     * Validate reset token.
-     *
-     * @param tokenString Token string
-     * @return true if token is valid (not used, not expired)
-     */
     @Transactional(readOnly = true)
     public boolean validateResetToken(String tokenString) {
         Optional<PasswordResetToken> token = tokenRepository
@@ -123,12 +73,6 @@ public class PasswordService {
         return token.isPresent();
     }
 
-    /**
-     * Reset password using valid token (FR-009).
-     *
-     * @param tokenString Reset token
-     * @param newPassword New password
-     */
     public void resetPassword(String tokenString, String newPassword) {
         if (!validatePasswordComplexity(newPassword)) {
             throw new RuntimeException("Password does not meet complexity requirements");
@@ -140,16 +84,13 @@ public class PasswordService {
 
         User user = token.getUser();
 
-        // Update password in Keycloak
         if (user.getKeycloakId() != null) {
             keycloakSyncService.resetPasswordInKeycloak(user.getKeycloakId(), newPassword);
         }
 
-        // Update password changed timestamp
         user.setPasswordChangedAt(OffsetDateTime.now());
         userRepository.save(user);
 
-        // Mark token as used
         token.setUsed(true);
         token.setUsedAt(OffsetDateTime.now());
         tokenRepository.save(token);
@@ -157,13 +98,6 @@ public class PasswordService {
         log.info("Password reset successful for user: {}", user.getId());
     }
 
-    /**
-     * Change password for authenticated user.
-     *
-     * @param userId User ID
-     * @param currentPassword Current password
-     * @param newPassword New password
-     */
     public void changePassword(UUID userId, String currentPassword, String newPassword) {
         if (!validatePasswordComplexity(newPassword)) {
             throw new RuntimeException("Password does not meet complexity requirements");
@@ -172,26 +106,18 @@ public class PasswordService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
 
-        // Password verification and update handled by Keycloak
         if (user.getKeycloakId() != null) {
-            // Keycloak handles current password verification internally
             keycloakSyncService.resetPasswordInKeycloak(user.getKeycloakId(), newPassword);
         } else {
             throw new RuntimeException("User not linked to Keycloak");
         }
 
-        // Update password changed timestamp
         user.setPasswordChangedAt(OffsetDateTime.now());
         userRepository.save(user);
 
         log.info("Password changed for user: {}", userId);
     }
 
-    /**
-     * Clean up expired password reset tokens.
-     *
-     * @return Number of tokens deleted
-     */
     public int cleanupExpiredTokens() {
         var expiredTokens = tokenRepository.findByExpiresAtBefore(OffsetDateTime.now());
         int count = expiredTokens.size();

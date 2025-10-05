@@ -19,15 +19,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-/**
- * T055: AuthorizationService
- * Service for role-based access control (RBAC).
- *
- * Constitutional Compliance:
- * - FR-005: Role-based access control with distinct permission levels
- * - FR-006: Service method-level authorization enforcement
- * - Principle III: Layered Architecture - Business logic in service layer
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -38,13 +29,6 @@ public class AuthorizationService {
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
 
-    /**
-     * Check if user has specific role.
-     *
-     * @param userId User ID
-     * @param roleName Role name
-     * @return true if user has the role
-     */
     @Cacheable(value = "userRoles", key = "#userId + '_' + #roleName")
     public boolean hasRole(UUID userId, String roleName) {
         User user = userRepository.findById(userId)
@@ -54,13 +38,6 @@ public class AuthorizationService {
                 .anyMatch(role -> role.getName().equalsIgnoreCase(roleName));
     }
 
-    /**
-     * Check if user has any of the specified roles.
-     *
-     * @param userId User ID
-     * @param roleNames Role names
-     * @return true if user has any of the roles
-     */
     public boolean hasAnyRole(UUID userId, String... roleNames) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
@@ -79,13 +56,6 @@ public class AuthorizationService {
         return false;
     }
 
-    /**
-     * Check if user has all specified roles.
-     *
-     * @param userId User ID
-     * @param roleNames Role names
-     * @return true if user has all the roles
-     */
     public boolean hasAllRoles(UUID userId, String... roleNames) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
@@ -104,30 +74,16 @@ public class AuthorizationService {
         return true;
     }
 
-    /**
-     * Check if user has specific permission.
-     *
-     * @param userId User ID
-     * @param permissionName Permission name
-     * @return true if user has the permission
-     */
     @Cacheable(value = "userPermissions", key = "#userId + '_' + #permissionName")
     public boolean hasPermission(UUID userId, String permissionName) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
 
-        // Check permissions from roles
         return user.getRoles().stream()
                 .flatMap(role -> role.getPermissions().stream())
                 .anyMatch(permission -> permission.getName().equalsIgnoreCase(permissionName));
     }
 
-    /**
-     * Get all permissions for user.
-     *
-     * @param userId User ID
-     * @return Set of permission names
-     */
     @Cacheable(value = "userAllPermissions", key = "#userId")
     public Set<String> getUserPermissions(UUID userId) {
         User user = userRepository.findById(userId)
@@ -139,12 +95,6 @@ public class AuthorizationService {
                 .collect(Collectors.toSet());
     }
 
-    /**
-     * Get all roles for user.
-     *
-     * @param userId User ID
-     * @return Set of role names
-     */
     @Cacheable(value = "userAllRoles", key = "#userId")
     public Set<String> getUserRoles(UUID userId) {
         User user = userRepository.findById(userId)
@@ -155,33 +105,14 @@ public class AuthorizationService {
                 .collect(Collectors.toSet());
     }
 
-    /**
-     * Check if user is admin (ADMIN or SUPER_ADMIN role).
-     *
-     * @param userId User ID
-     * @return true if user is admin
-     */
     public boolean isAdmin(UUID userId) {
         return hasAnyRole(userId, "ADMIN", "SUPER_ADMIN");
     }
 
-    /**
-     * Check if user is partner admin.
-     *
-     * @param userId User ID
-     * @return true if user is partner admin
-     */
     public boolean isPartnerAdmin(UUID userId) {
         return hasAnyRole(userId, "PARTNER_ADMIN", "ADMIN", "SUPER_ADMIN");
     }
 
-    /**
-     * Check if authenticated user has role.
-     *
-     * @param authentication Spring Security authentication
-     * @param roleName Role name
-     * @return true if authenticated user has the role
-     */
     public boolean authenticationHasRole(Authentication authentication, String roleName) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return false;
@@ -193,13 +124,6 @@ public class AuthorizationService {
                                       authority.equalsIgnoreCase(roleName));
     }
 
-    /**
-     * Check if authenticated user has any of the specified roles.
-     *
-     * @param authentication Spring Security authentication
-     * @param roleNames Role names
-     * @return true if authenticated user has any of the roles
-     */
     public boolean authenticationHasAnyRole(Authentication authentication, String... roleNames) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return false;
@@ -220,12 +144,6 @@ public class AuthorizationService {
         return false;
     }
 
-    /**
-     * Assign role to user.
-     *
-     * @param userId User ID
-     * @param roleName Role name
-     */
     @Transactional
     public void assignRoleToUser(UUID userId, String roleName) {
         User user = userRepository.findById(userId)
@@ -240,12 +158,6 @@ public class AuthorizationService {
         log.info("Role {} assigned to user: {}", roleName, userId);
     }
 
-    /**
-     * Remove role from user.
-     *
-     * @param userId User ID
-     * @param roleName Role name
-     */
     @Transactional
     public void removeRoleFromUser(UUID userId, String roleName) {
         User user = userRepository.findById(userId)
@@ -257,22 +169,10 @@ public class AuthorizationService {
         log.info("Role {} removed from user: {}", roleName, userId);
     }
 
-    /**
-     * Check if role exists.
-     *
-     * @param roleName Role name
-     * @return true if role exists
-     */
     public boolean roleExists(String roleName) {
         return roleRepository.findByName(roleName).isPresent();
     }
 
-    /**
-     * Check if permission exists.
-     *
-     * @param permissionName Permission name
-     * @return true if permission exists
-     */
     public boolean permissionExists(String permissionName) {
         return permissionRepository.findByName(permissionName).isPresent();
     }

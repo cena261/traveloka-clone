@@ -15,14 +15,6 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * T058: ProfileService
- * Service for user profile operations.
- *
- * Constitutional Compliance:
- * - FR-019: Extended user profiles with preferences and settings
- * - Principle III: Layered Architecture - Business logic in service layer
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -32,12 +24,6 @@ public class ProfileService {
     private final UserProfileRepository profileRepository;
     private final UserRepository userRepository;
 
-    /**
-     * Create user profile.
-     *
-     * @param userId User ID
-     * @return UserProfile
-     */
     public UserProfile createProfile(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
@@ -65,30 +51,16 @@ public class ProfileService {
         return saved;
     }
 
-    /**
-     * Get user profile.
-     *
-     * @param userId User ID
-     * @return UserProfile
-     */
     @Transactional(readOnly = true)
     public UserProfile getProfile(UUID userId) {
         return profileRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Profile not found for user: " + userId));
     }
 
-    /**
-     * Update user profile.
-     *
-     * @param userId User ID
-     * @param profile Updated profile data
-     * @return Updated UserProfile
-     */
     public UserProfile updateProfile(UUID userId, UserProfile profile) {
         UserProfile existingProfile = profileRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Profile not found for user: " + userId));
 
-        // Update fields
         if (profile.getMiddleName() != null) existingProfile.setMiddleName(profile.getMiddleName());
         if (profile.getNickname() != null) existingProfile.setNickname(profile.getNickname());
         if (profile.getBio() != null) existingProfile.setBio(profile.getBio());
@@ -101,7 +73,6 @@ public class ProfileService {
         if (profile.getInstagramUrl() != null) existingProfile.setInstagramUrl(profile.getInstagramUrl());
         if (profile.getSpecialNeeds() != null) existingProfile.setSpecialNeeds(profile.getSpecialNeeds());
 
-        // Update JSONB fields
         if (profile.getNotificationPreferences() != null) {
             existingProfile.setNotificationPreferences(profile.getNotificationPreferences());
         }
@@ -112,7 +83,6 @@ public class ProfileService {
             existingProfile.setAccessibilitySettings(profile.getAccessibilitySettings());
         }
 
-        // Recalculate completion percentage
         existingProfile.setProfileCompletionPercentage(calculateCompletionPercentage(existingProfile));
         existingProfile.setLastProfileUpdate(OffsetDateTime.now());
         existingProfile.setUpdatedAt(OffsetDateTime.now());
@@ -123,12 +93,6 @@ public class ProfileService {
         return saved;
     }
 
-    /**
-     * Update preferred airlines.
-     *
-     * @param userId User ID
-     * @param airlines List of airline codes
-     */
     public void updatePreferredAirlines(UUID userId, List<String> airlines) {
         UserProfile profile = getProfile(userId);
         profile.setPreferredAirlines(airlines);
@@ -139,12 +103,6 @@ public class ProfileService {
         log.info("Updated preferred airlines for user: {}", userId);
     }
 
-    /**
-     * Update preferred hotels.
-     *
-     * @param userId User ID
-     * @param hotels List of hotel codes
-     */
     public void updatePreferredHotels(UUID userId, List<String> hotels) {
         UserProfile profile = getProfile(userId);
         profile.setPreferredHotels(hotels);
@@ -155,12 +113,6 @@ public class ProfileService {
         log.info("Updated preferred hotels for user: {}", userId);
     }
 
-    /**
-     * Update dietary restrictions.
-     *
-     * @param userId User ID
-     * @param restrictions List of dietary restrictions
-     */
     public void updateDietaryRestrictions(UUID userId, List<String> restrictions) {
         UserProfile profile = getProfile(userId);
         profile.setDietaryRestrictions(restrictions);
@@ -171,17 +123,10 @@ public class ProfileService {
         log.info("Updated dietary restrictions for user: {}", userId);
     }
 
-    /**
-     * Update loyalty points.
-     *
-     * @param userId User ID
-     * @param points Loyalty points to add
-     */
     public void addLoyaltyPoints(UUID userId, int points) {
         UserProfile profile = getProfile(userId);
         profile.setLoyaltyPoints(profile.getLoyaltyPoints() + points);
 
-        // Update loyalty tier based on points
         String newTier = calculateLoyaltyTier(profile.getLoyaltyPoints());
         if (!newTier.equals(profile.getLoyaltyTier())) {
             profile.setLoyaltyTier(newTier);
@@ -194,12 +139,6 @@ public class ProfileService {
         log.info("Added {} loyalty points to user: {}", points, userId);
     }
 
-    /**
-     * Update booking statistics.
-     *
-     * @param userId User ID
-     * @param bookingAmount Booking amount
-     */
     public void updateBookingStats(UUID userId, BigDecimal bookingAmount) {
         UserProfile profile = getProfile(userId);
         profile.setTotalBookings(profile.getTotalBookings() + 1);
@@ -210,22 +149,11 @@ public class ProfileService {
         log.info("Updated booking stats for user: {}", userId);
     }
 
-    /**
-     * Check if profile exists.
-     *
-     * @param userId User ID
-     * @return true if profile exists
-     */
     @Transactional(readOnly = true)
     public boolean profileExists(UUID userId) {
         return profileRepository.existsByUserId(userId);
     }
 
-    /**
-     * Delete user profile.
-     *
-     * @param userId User ID
-     */
     public void deleteProfile(UUID userId) {
         UserProfile profile = getProfile(userId);
         profileRepository.delete(profile);
@@ -233,12 +161,6 @@ public class ProfileService {
         log.info("Profile deleted for user: {}", userId);
     }
 
-    /**
-     * Calculate profile completion percentage.
-     *
-     * @param profile UserProfile
-     * @return Completion percentage (0-100)
-     */
     private int calculateCompletionPercentage(UserProfile profile) {
         if (profile == null) return 10; // Base 10% for just creating profile
 
@@ -264,12 +186,6 @@ public class ProfileService {
         return (int) ((completedFields / (double) totalFields) * 100);
     }
 
-    /**
-     * Calculate loyalty tier based on points.
-     *
-     * @param points Loyalty points
-     * @return Loyalty tier (bronze, silver, gold, platinum)
-     */
     private String calculateLoyaltyTier(int points) {
         if (points >= 10000) return "platinum";
         if (points >= 5000) return "gold";

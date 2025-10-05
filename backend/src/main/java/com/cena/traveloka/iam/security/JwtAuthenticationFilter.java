@@ -19,16 +19,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * T047: JwtAuthenticationFilter
- * Filter to extract and validate JWT tokens from requests.
- *
- * Constitutional Compliance:
- * - FR-003: Validate authentication tokens
- * - Extracts JWT from Authorization header
- * - Sets Spring Security authentication context
- * - Used in IamSecurityConfig filter chain
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -69,13 +59,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    /**
-     * Extract JWT token from Authorization header.
-     * Expected format: "Bearer <token>"
-     *
-     * @param request HTTP request
-     * @return JWT token string or null
-     */
     private String extractJwtFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
 

@@ -10,32 +10,6 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.util.concurrent.TimeUnit;
 
-/**
- * Rate limit interceptor for authentication endpoints.
- * <p>
- * Uses Redis to track and enforce rate limits per IP address.
- * </p>
- *
- * <p>Implementation Details:</p>
- * <ul>
- *   <li>Tracks requests by IP address</li>
- *   <li>Uses Redis with TTL for automatic cleanup</li>
- *   <li>Returns HTTP 429 (Too Many Requests) when limit exceeded</li>
- *   <li>Provides retry-after header with seconds to wait</li>
- * </ul>
- *
- * <p>Rate Limits by Endpoint:</p>
- * <ul>
- *   <li>/api/v1/auth/login: 5 requests per minute</li>
- *   <li>/api/v1/auth/register: 3 requests per minute</li>
- *   <li>/api/v1/auth/forgot-password: 3 requests per minute</li>
- *   <li>/api/v1/auth/reset-password: 3 requests per minute</li>
- *   <li>/api/v1/auth/verify-email: 5 requests per minute</li>
- * </ul>
- *
- * @author Traveloka IAM Team
- * @since 1.0.0
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -55,21 +29,16 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         String clientIp = getClientIp(request);
         String endpoint = request.getRequestURI();
 
-        // Determine rate limit based on endpoint
         int limit = getRateLimitForEndpoint(endpoint);
 
-        // Create Redis key: rate_limit:ip:endpoint
         String redisKey = RATE_LIMIT_KEY_PREFIX + clientIp + ":" + endpoint;
 
-        // Increment counter
         Long currentCount = redisTemplate.opsForValue().increment(redisKey);
 
-        // Set expiry on first request
         if (currentCount != null && currentCount == 1) {
             redisTemplate.expire(redisKey, WINDOW_SECONDS, TimeUnit.SECONDS);
         }
 
-        // Check if limit exceeded
         if (currentCount != null && currentCount > limit) {
             log.warn("Rate limit exceeded for IP: {} on endpoint: {} (count: {})",
                     clientIp, endpoint, currentCount);
@@ -92,7 +61,6 @@ public class RateLimitInterceptor implements HandlerInterceptor {
             return false;
         }
 
-        // Add rate limit headers to successful requests
         long remaining = Math.max(0, limit - (currentCount != null ? currentCount : 0));
         response.setHeader("X-RateLimit-Limit", String.valueOf(limit));
         response.setHeader("X-RateLimit-Remaining", String.valueOf(remaining));
@@ -101,12 +69,6 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         return true;
     }
 
-    /**
-     * Determine rate limit based on endpoint sensitivity.
-     *
-     * @param endpoint Request URI
-     * @return Maximum requests per minute
-     */
     private int getRateLimitForEndpoint(String endpoint) {
         if (endpoint.contains("/register") ||
                 endpoint.contains("/forgot-password") ||
@@ -116,17 +78,9 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         return DEFAULT_LIMIT; // 5 per minute for login and verification
     }
 
-    /**
-     * Extract client IP address from request.
-     * Handles X-Forwarded-For header for proxied requests.
-     *
-     * @param request HTTP request
-     * @return Client IP address
-     */
     private String getClientIp(HttpServletRequest request) {
         String xForwardedFor = request.getHeader("X-Forwarded-For");
         if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
-            // X-Forwarded-For can contain multiple IPs, take the first one
             return xForwardedFor.split(",")[0].trim();
         }
 

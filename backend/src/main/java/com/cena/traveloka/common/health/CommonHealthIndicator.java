@@ -12,23 +12,6 @@ import org.springframework.stereotype.Component;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * T051: Health Indicator for monitoring external service status.
- *
- * This health indicator provides information about:
- * - Redis cache service health and circuit breaker state
- * - Elasticsearch search service health and circuit breaker state
- * - MinIO object storage service health and circuit breaker state
- *
- * Health status determination:
- * - UP: All services operational and circuits closed
- * - DEGRADED: Some services unavailable but system functional (circuits open)
- * - DOWN: Critical services unavailable (Redis down)
- *
- * Exposed via Spring Boot Actuator at: /actuator/health
- *
- * Based on research.md specifications for external service monitoring.
- */
 @Component("commonHealth")
 @RequiredArgsConstructor
 @Slf4j
@@ -43,17 +26,14 @@ public class CommonHealthIndicator implements HealthIndicator {
         boolean allServicesUp = true;
         boolean criticalServicesUp = true;
 
-        // Check Redis health (critical service - cache fallback to database)
         RedisHealthStatus redisHealth = checkRedisHealth();
         details.put("redis", redisHealth.toMap());
 
         if (!redisHealth.isHealthy()) {
             log.warn("Redis service is unhealthy: {}", redisHealth.getMessage());
-            // Redis is not critical - can fallback to database
             allServicesUp = false;
         }
 
-        // Check Elasticsearch health (non-critical - search can be degraded)
         ElasticsearchHealthStatus esHealth = checkElasticsearchHealth();
         details.put("elasticsearch", esHealth.toMap());
 
@@ -62,7 +42,6 @@ public class CommonHealthIndicator implements HealthIndicator {
             allServicesUp = false;
         }
 
-        // Check MinIO health (non-critical - can serve cached/existing content)
         MinioHealthStatus minioHealth = checkMinioHealth();
         details.put("minio", minioHealth.toMap());
 
@@ -71,19 +50,16 @@ public class CommonHealthIndicator implements HealthIndicator {
             allServicesUp = false;
         }
 
-        // Determine overall health status
         if (criticalServicesUp && allServicesUp) {
             return Health.up()
                 .withDetails(details)
                 .build();
         } else if (criticalServicesUp) {
-            // System is degraded but functional
             return Health.status("DEGRADED")
                 .withDetails(details)
                 .withDetail("message", "Some external services are unavailable but system is operational")
                 .build();
         } else {
-            // Critical services down
             return Health.down()
                 .withDetails(details)
                 .withDetail("message", "Critical services are unavailable")
@@ -91,9 +67,6 @@ public class CommonHealthIndicator implements HealthIndicator {
         }
     }
 
-    /**
-     * Check Redis service health and circuit breaker state.
-     */
     private RedisHealthStatus checkRedisHealth() {
         CircuitBreaker.State circuitState = circuitBreakerService.getRedisCircuitState();
 
@@ -105,7 +78,6 @@ public class CommonHealthIndicator implements HealthIndicator {
             );
         }
 
-        // Try to ping Redis
         try {
             String pong = circuitBreakerService.executeRedis(() -> {
                 return redisConnectionFactory.getConnection().ping();
@@ -134,9 +106,6 @@ public class CommonHealthIndicator implements HealthIndicator {
         }
     }
 
-    /**
-     * Check Elasticsearch service health and circuit breaker state.
-     */
     private ElasticsearchHealthStatus checkElasticsearchHealth() {
         CircuitBreaker.State circuitState = circuitBreakerService.getElasticsearchCircuitState();
 
@@ -148,8 +117,6 @@ public class CommonHealthIndicator implements HealthIndicator {
             );
         }
 
-        // For now, consider Elasticsearch healthy if circuit is closed
-        // Actual ES client health check would require ElasticsearchClient bean
         if (circuitState == CircuitBreaker.State.CLOSED) {
             return new ElasticsearchHealthStatus(
                 true,
@@ -165,9 +132,6 @@ public class CommonHealthIndicator implements HealthIndicator {
         }
     }
 
-    /**
-     * Check MinIO service health and circuit breaker state.
-     */
     private MinioHealthStatus checkMinioHealth() {
         CircuitBreaker.State circuitState = circuitBreakerService.getMinioCircuitState();
 
@@ -179,8 +143,6 @@ public class CommonHealthIndicator implements HealthIndicator {
             );
         }
 
-        // For now, consider MinIO healthy if circuit is closed
-        // Actual MinIO client health check would require MinioClient bean
         if (circuitState == CircuitBreaker.State.CLOSED) {
             return new MinioHealthStatus(
                 true,
@@ -196,9 +158,6 @@ public class CommonHealthIndicator implements HealthIndicator {
         }
     }
 
-    /**
-     * Redis health status data structure.
-     */
     private static class RedisHealthStatus {
         private final boolean healthy;
         private final String circuitState;
@@ -227,9 +186,6 @@ public class CommonHealthIndicator implements HealthIndicator {
         }
     }
 
-    /**
-     * Elasticsearch health status data structure.
-     */
     private static class ElasticsearchHealthStatus {
         private final boolean healthy;
         private final String circuitState;
@@ -258,9 +214,6 @@ public class CommonHealthIndicator implements HealthIndicator {
         }
     }
 
-    /**
-     * MinIO health status data structure.
-     */
     private static class MinioHealthStatus {
         private final boolean healthy;
         private final String circuitState;

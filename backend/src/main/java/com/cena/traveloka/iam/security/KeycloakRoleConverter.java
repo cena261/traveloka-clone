@@ -13,16 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * T048: KeycloakRoleConverter
- * Converts Keycloak JWT roles to Spring Security authorities.
- *
- * Constitutional Compliance:
- * - FR-002: Keycloak integration for authentication
- * - FR-005: Role-based access control (RBAC)
- * - Extracts realm_access.roles and resource_access roles from Keycloak JWT
- * - Used in IamSecurityConfig JWT authentication converter
- */
 @Component
 public class KeycloakRoleConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
 
@@ -35,13 +25,11 @@ public class KeycloakRoleConverter implements Converter<Jwt, Collection<GrantedA
     public Collection<GrantedAuthority> convert(@NonNull Jwt jwt) {
         List<GrantedAuthority> authorities = new ArrayList<>();
 
-        // Extract realm roles
         Collection<String> realmRoles = extractRealmRoles(jwt);
         authorities.addAll(realmRoles.stream()
                 .map(role -> new SimpleGrantedAuthority(ROLE_PREFIX + role.toUpperCase()))
                 .collect(Collectors.toList()));
 
-        // Extract resource roles (client-specific roles)
         Collection<String> resourceRoles = extractResourceRoles(jwt);
         authorities.addAll(resourceRoles.stream()
                 .map(role -> new SimpleGrantedAuthority(ROLE_PREFIX + role.toUpperCase()))
@@ -50,13 +38,6 @@ public class KeycloakRoleConverter implements Converter<Jwt, Collection<GrantedA
         return authorities;
     }
 
-    /**
-     * Extract realm-level roles from Keycloak JWT.
-     * Format: jwt.realm_access.roles = ["admin", "customer"]
-     *
-     * @param jwt Keycloak JWT token
-     * @return Collection of realm role names
-     */
     @SuppressWarnings("unchecked")
     private Collection<String> extractRealmRoles(Jwt jwt) {
         Map<String, Object> realmAccess = jwt.getClaim(REALM_ACCESS_CLAIM);
@@ -71,13 +52,6 @@ public class KeycloakRoleConverter implements Converter<Jwt, Collection<GrantedA
         return new ArrayList<>();
     }
 
-    /**
-     * Extract resource-level (client-specific) roles from Keycloak JWT.
-     * Format: jwt.resource_access.{client_id}.roles = ["partner_admin"]
-     *
-     * @param jwt Keycloak JWT token
-     * @return Collection of resource role names
-     */
     @SuppressWarnings("unchecked")
     private Collection<String> extractResourceRoles(Jwt jwt) {
         List<String> roles = new ArrayList<>();

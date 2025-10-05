@@ -13,15 +13,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.sql.DataSource;
 
-/**
- * Database configuration for HikariCP connection pool.
- * Features:
- * - HikariCP connection pool with optimized settings
- * - JPA auditing enabled for automatic timestamp and user tracking
- * - JPA repositories enabled with proper base packages
- * - Transaction management enabled
- * - Environment-specific connection pool sizing
- */
 @Configuration
 @EnableJpaRepositories(basePackages = "com.cena.traveloka")
 @EnableJpaAuditing
@@ -73,39 +64,30 @@ public class DatabaseConfig {
     @Value("${app.datasource.pool.pool-name:TravelokaHikariPool}")
     private String poolName;
 
-    /**
-     * Configure HikariCP DataSource with optimized connection pool settings
-     * @return configured HikariDataSource
-     */
     @Bean
     @Primary
     @ConditionalOnProperty(name = "app.datasource.enabled", havingValue = "true", matchIfMissing = true)
     public DataSource dataSource() {
         HikariConfig config = new HikariConfig();
 
-        // Basic connection properties
         config.setJdbcUrl(jdbcUrl);
         config.setUsername(username);
         config.setPassword(password);
         config.setDriverClassName(driverClassName);
 
-        // Connection pool sizing
         config.setMinimumIdle(minimumIdle);
         config.setMaximumPoolSize(maximumPoolSize);
 
-        // Connection timeouts
         config.setConnectionTimeout(connectionTimeout);
         config.setIdleTimeout(idleTimeout);
         config.setMaxLifetime(maxLifetime);
         config.setValidationTimeout(validationTimeout);
 
-        // Pool behavior
         config.setAutoCommit(autoCommit);
         config.setReadOnly(readOnly);
         config.setConnectionTestQuery(connectionTestQuery);
         config.setPoolName(poolName);
 
-        // Performance optimizations
         config.setLeakDetectionThreshold(leakDetectionThreshold);
         config.addDataSourceProperty("cachePrepStmts", "true");
         config.addDataSourceProperty("prepStmtCacheSize", "250");

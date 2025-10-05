@@ -9,36 +9,10 @@ import org.springframework.context.annotation.Configuration;
 
 import java.time.Duration;
 
-/**
- * Circuit Breaker Configuration for external service resilience.
- *
- * Configures circuit breakers for:
- * - Redis cache operations
- * - Elasticsearch search operations
- * - MinIO object storage operations
- *
- * Circuit breaker pattern prevents cascading failures by:
- * 1. Opening circuit after failure threshold exceeded
- * 2. Allowing system to recover during open state
- * 3. Testing with half-open state before full recovery
- *
- * Based on research.md specifications for external service fault tolerance.
- */
 @Configuration
 @Slf4j
 public class CircuitBreakerConfig {
 
-    /**
-     * Circuit Breaker Registry with custom configurations for external services.
-     *
-     * Default configuration:
-     * - Sliding window size: 10 calls
-     * - Failure rate threshold: 50%
-     * - Wait duration in open state: 60 seconds
-     * - Permitted calls in half-open: 5
-     * - Slow call threshold: 2 seconds
-     * - Slow call rate threshold: 50%
-     */
     @Bean
     public CircuitBreakerRegistry circuitBreakerRegistry() {
         io.github.resilience4j.circuitbreaker.CircuitBreakerConfig defaultConfig =
@@ -59,7 +33,6 @@ public class CircuitBreakerConfig {
 
         CircuitBreakerRegistry registry = CircuitBreakerRegistry.of(defaultConfig);
 
-        // Register event listeners for monitoring
         registry.circuitBreaker("default").getEventPublisher()
             .onStateTransition(event ->
                 log.info("Circuit Breaker state transition: {} -> {}",
@@ -73,16 +46,6 @@ public class CircuitBreakerConfig {
         return registry;
     }
 
-    /**
-     * Circuit Breaker for Redis cache operations.
-     *
-     * Configuration optimized for cache operations:
-     * - Faster recovery (30 seconds wait)
-     * - Lower failure threshold (40%)
-     * - Smaller sliding window (5 calls)
-     *
-     * Cache failures should fail fast and allow fallback to database.
-     */
     @Bean
     public CircuitBreaker redisCircuitBreaker(CircuitBreakerRegistry registry) {
         io.github.resilience4j.circuitbreaker.CircuitBreakerConfig config =
@@ -109,16 +72,6 @@ public class CircuitBreakerConfig {
         return circuitBreaker;
     }
 
-    /**
-     * Circuit Breaker for Elasticsearch operations.
-     *
-     * Configuration for search operations:
-     * - Standard recovery time (60 seconds)
-     * - Standard failure threshold (50%)
-     * - Longer slow call threshold (3 seconds for complex queries)
-     *
-     * Search operations can be more forgiving of slow responses.
-     */
     @Bean
     public CircuitBreaker elasticsearchCircuitBreaker(CircuitBreakerRegistry registry) {
         io.github.resilience4j.circuitbreaker.CircuitBreakerConfig config =
@@ -145,16 +98,6 @@ public class CircuitBreakerConfig {
         return circuitBreaker;
     }
 
-    /**
-     * Circuit Breaker for MinIO object storage operations.
-     *
-     * Configuration for file operations:
-     * - Longer recovery time (90 seconds)
-     * - Higher failure threshold (60%)
-     * - Very long slow call threshold (10 seconds for large files)
-     *
-     * File operations are expected to take longer and should be more resilient.
-     */
     @Bean
     public CircuitBreaker minioCircuitBreaker(CircuitBreakerRegistry registry) {
         io.github.resilience4j.circuitbreaker.CircuitBreakerConfig config =

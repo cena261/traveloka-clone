@@ -39,7 +39,6 @@ public class Session {
     @Column(name = "refresh_token", length = 500)
     String refreshToken;
 
-    // network info
     String ipAddress;
     @Column(columnDefinition = "text")
     String userAgent;
@@ -50,19 +49,16 @@ public class Session {
     String locationCountry;
     String locationCity;
 
-    // session management
     Boolean isActive = true;
     OffsetDateTime lastActivity;
     OffsetDateTime expiresAt;
     OffsetDateTime refreshExpiresAt;
 
-    // security
     Boolean isSuspicious = false;
     Integer riskScore = 0;
     Boolean requires2fa = false;
     Boolean twoFaCompleted = false;
 
-    // metadata
     OffsetDateTime createdAt;
     OffsetDateTime updatedAt;
     OffsetDateTime terminatedAt;

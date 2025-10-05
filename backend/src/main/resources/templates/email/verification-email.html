@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:remove="all">Email Verification - Traveloka</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background-color: #0064D2;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            color: #ffffff;
+            margin: 0;
+            font-size: 28px;
+        }
+        .content {
+            padding: 40px 30px;
+            color: #333333;
+            line-height: 1.6;
+        }
+        .greeting {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .verification-button {
+            display: inline-block;
+            margin: 30px 0;
+            padding: 15px 40px;
+            background-color: #0064D2;
+            color: #ffffff !important;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .verification-button:hover {
+            background-color: #0052A3;
+        }
+        .alternative-text {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-left: 4px solid #0064D2;
+            font-size: 14px;
+        }
+        .token-code {
+            font-family: 'Courier New', monospace;
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: #d63384;
+            word-break: break-all;
+        }
+        .footer {
+            padding: 20px 30px;
+            background-color: #f8f8f8;
+            text-align: center;
+            font-size: 12px;
+            color: #666666;
+        }
+        .expiry-notice {
+            color: #d63384;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+        .security-notice {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>Traveloka</h1>
+        </div>
+
+        <div class="content">
+            <p class="greeting" th:text="'Hello, ' + ${userName} + '!'">
+                Hello, User!
+            </p>
+
+            <p>
+                Thank you for registering with Traveloka! We're excited to have you on board.
+            </p>
+
+            <p>
+                To complete your registration and activate your account, please verify your email address by clicking the button below:
+            </p>
+
+            <div style="text-align: center;">
+                <a th:href="${verificationUrl}" class="verification-button">
+                    Verify Email Address
+                </a>
+            </div>
+
+            <div class="alternative-text">
+                <p><strong>Button not working?</strong></p>
+                <p>Copy and paste the following link into your browser:</p>
+                <p><span class="token-code" th:text="${verificationUrl}">https://traveloka.com/verify?token=abc123</span></p>
+            </div>
+
+            <p class="expiry-notice">
+                ⏰ This verification link will expire in
+                <span th:text="${expiryHours}">24</span> hours.
+            </p>
+
+            <div class="security-notice">
+                <strong>🔒 Security Notice:</strong><br/>
+                If you did not create an account with Traveloka, please ignore this email or contact our support team if you have concerns.
+            </div>
+
+            <p style="margin-top: 30px;">
+                Best regards,<br/>
+                <strong>The Traveloka Team</strong>
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>
+                This is an automated message, please do not reply to this email.
+            </p>
+            <p>
+                © <span th:text="${#dates.year(#dates.createNow())}">2025</span> Traveloka. All rights reserved.
+            </p>
+            <p style="margin-top: 10px;">
+                <a href="https://www.traveloka.com" style="color: #0064D2; text-decoration: none;">Visit our website</a> |
+                <a href="https://www.traveloka.com/support" style="color: #0064D2; text-decoration: none;">Contact Support</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

@@ -76,4 +76,21 @@ public interface UserRepository extends JpaRepository<User, UUID> {
      * @return List of users with excessive failed login attempts
      */
     List<User> findByFailedLoginAttemptsGreaterThanEqual(int threshold);
+
+    /**
+     * Find users with specific status and whose lockout period has expired.
+     * Used by AccountLockoutScheduler to automatically unlock accounts.
+     * @param status User status
+     * @param lockedUntil Timestamp to compare against
+     * @return List of users whose lockout has expired
+     */
+    List<User> findByStatusAndLockedUntilBefore(Status status, java.time.OffsetDateTime lockedUntil);
+
+    /**
+     * Count users by status.
+     * Used for monitoring and reporting.
+     * @param status User status
+     * @return Count of users with the specified status
+     */
+    long countByStatus(Status status);
 }

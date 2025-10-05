@@ -5,6 +5,7 @@ import com.cena.traveloka.iam.entity.Role;
 import com.cena.traveloka.iam.entity.User;
 import com.cena.traveloka.iam.repository.RoleRepository;
 import com.cena.traveloka.iam.repository.UserRepository;
+import jakarta.ws.rs.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,7 +21,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 import java.time.OffsetDateTime;
 import java.util.*;
 
@@ -376,7 +377,7 @@ class KeycloakSyncServiceTest {
 
         when(keycloak.realm(anyString())).thenReturn(realmResource);
         when(realmResource.users()).thenReturn(usersResource);
-        when(usersResource.get(nonExistentId.toString())).thenThrow(new javax.ws.rs.NotFoundException());
+        when(usersResource.get(nonExistentId.toString())).thenThrow(new NotFoundException());
 
         // When/Then
         assertThatThrownBy(() -> keycloakSyncService.syncUserFromKeycloak(nonExistentId))

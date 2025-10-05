@@ -103,7 +103,7 @@ class AuthenticationServiceTest {
     void shouldAuthenticateUserWithValidCredentials() {
         // Given
         when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.of(testUser));
-        when(passwordEncoder.matches(loginRequest.getPassword(), testUser.getPassword())).thenReturn(true);
+        // Password validation handled by Keycloak
         when(jwtTokenProvider.generateAccessToken(any(), anyString(), anyString())).thenReturn("access-token");
         when(jwtTokenProvider.generateRefreshToken(anyString())).thenReturn("refresh-token");
         when(jwtTokenProvider.getAccessTokenExpirationSeconds()).thenReturn(3600L);
@@ -132,7 +132,7 @@ class AuthenticationServiceTest {
     void shouldThrowExceptionForInvalidCredentials() {
         // Given
         when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.of(testUser));
-        when(passwordEncoder.matches(loginRequest.getPassword(), testUser.getPassword())).thenReturn(false);
+        // Password validation handled by Keycloak
 
         // When/Then
         assertThatThrownBy(() -> authenticationService.login(loginRequest, "192.168.1.1", "Mozilla/5.0"))
@@ -168,7 +168,7 @@ class AuthenticationServiceTest {
         // Given
         testUser.setFailedLoginAttempts(2);
         when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.of(testUser));
-        when(passwordEncoder.matches(loginRequest.getPassword(), testUser.getPassword())).thenReturn(false);
+        // Password validation handled by Keycloak
 
         // When
         assertThatThrownBy(() -> authenticationService.login(loginRequest, "192.168.1.1", "Mozilla/5.0"))
@@ -186,7 +186,7 @@ class AuthenticationServiceTest {
         // Given
         testUser.setFailedLoginAttempts(4);
         when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.of(testUser));
-        when(passwordEncoder.matches(loginRequest.getPassword(), testUser.getPassword())).thenReturn(false);
+        // Password validation handled by Keycloak
 
         // When
         assertThatThrownBy(() -> authenticationService.login(loginRequest, "192.168.1.1", "Mozilla/5.0"))
@@ -221,7 +221,7 @@ class AuthenticationServiceTest {
         // Given
         testUser.setFailedLoginAttempts(3);
         when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.of(testUser));
-        when(passwordEncoder.matches(loginRequest.getPassword(), testUser.getPassword())).thenReturn(true);
+        // Password validation handled by Keycloak
         when(jwtTokenProvider.generateAccessToken(any(), anyString(), anyString())).thenReturn("access-token");
         when(jwtTokenProvider.generateRefreshToken(anyString())).thenReturn("refresh-token");
 
@@ -299,7 +299,7 @@ class AuthenticationServiceTest {
     void shouldTrackLoginHistory() {
         // Given
         when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.of(testUser));
-        when(passwordEncoder.matches(loginRequest.getPassword(), testUser.getPassword())).thenReturn(true);
+        // Password validation handled by Keycloak
         when(jwtTokenProvider.generateAccessToken(any(), anyString(), anyString())).thenReturn("access-token");
         when(jwtTokenProvider.generateRefreshToken(anyString())).thenReturn("refresh-token");
 
@@ -320,7 +320,7 @@ class AuthenticationServiceTest {
     void shouldGenerateJwtTokensWithOneHourExpiry() {
         // Given
         when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.of(testUser));
-        when(passwordEncoder.matches(loginRequest.getPassword(), testUser.getPassword())).thenReturn(true);
+        // Password validation handled by Keycloak
         when(jwtTokenProvider.generateAccessToken(any(), anyString(), anyString())).thenReturn("access-token");
         when(jwtTokenProvider.generateRefreshToken(anyString())).thenReturn("refresh-token");
         when(jwtTokenProvider.getAccessTokenExpirationSeconds()).thenReturn(3600L); // 1 hour

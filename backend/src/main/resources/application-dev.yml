@@ -46,12 +46,31 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
       timeout: 2000ms
       jedis:
         pool:
           max-active: 20
           max-idle: 10
           min-idle: 2
+
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+    default-encoding: UTF-8
 
   cache:
     type: redis
@@ -65,6 +84,8 @@ spring:
     store-type: redis
     redis:
       namespace: "traveloka:session"
+      flush-mode: on_save
+      save-mode: on-set-attribute
     timeout: 86400s # 24 hours
 
   security:
@@ -73,7 +94,30 @@ spring:
         jwt:
           issuer-uri: http://localhost:${KEYCLOAK_HTTP_PORT:8081}/realms/cena
           jwk-set-uri: http://localhost:${KEYCLOAK_HTTP_PORT:8081}/realms/cena/protocol/openid-connect/certs
+      client:
+        registration:
+          google:
+              client-id: ${GOOGLE_CLIENT_ID:}
+              client-secret: ${GOOGLE_CLIENT_SECRET:}
+              scope: openid, profile, email
+              redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+              client-name: Google
+          facebook:
+              client-id: ${FACEBOOK_CLIENT_ID:}
+              client-secret: ${FACEBOOK_CLIENT_SECRET:}
+              scope: public_profile, email
+              redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+              client-name: Facebook
 
+        provider:
+          google:
+            issuer-uri: https://accounts.google.com
+
+          facebook:
+            authorization-uri: https://www.facebook.com/v18.0/dialog/oauth
+            token-uri: https://graph.facebook.com/v18.0/oauth/access_token
+            user-info-uri: https://graph.facebook.com/me?fields=id,name,email,picture
+            user-name-attribute: id
   servlet:
     multipart:
       max-file-size: 15MB
@@ -90,30 +134,53 @@ minio:
 traveloka:
   iam:
     enabled: true
+    base-url: http://localhost:8080
     jwt:
-      secret: ${JWT_SECRET:traveloka-secret-key-minimum-256-bits-for-hs256-signature-algorithm}
+      secret: ${JWT_SECRET:RwhrBi+jIJYW6gs87Urm5EJ1+ykLxAHtcUrqoHEoBYdtcJjbRr2p/rxD2SFrQhJw}
       access-token-expiration-ms: 3600000  # 1 hour (NFR-002)
       refresh-token-expiration-ms: 604800000  # 7 days
       issuer: traveloka-backend
+      audience: traveloka-api
+      algorithm: HS256
+      token-type: Bearer
+      clock-skew-seconds: 60
     keycloak:
       server-url: http://localhost:${KEYCLOAK_HTTP_PORT:8081}
       realm: master
+      client-id: traveloka-backend
+      client-secret: ${KEYCLOAK_CLIENT_SECRET:}
       admin-client-id: admin-cli
       admin-client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET:}
       admin-username: ${KEYCLOAK_ADMIN:admin}
       admin-password: ${KEYCLOAK_ADMIN_PASSWORD:admin}
       connection-pool-size: 10
       connection-timeout: 5000ms
+      retry:
+        max-attempts: 3
+        wait-duration: 1000
+        exponential-backoff-multiplier: 2
+      oauth:
+        google:
+          enabled: true
+        facebook:
+          enabled: true
+        apple:
+          enabled: false
+      socket-timeout: 10000
     session:
       max-concurrent-sessions: 5
       session-timeout: 86400s # 24 hours
       cleanup-interval: 3600s # 1 hour
       concurrent-session-control: true
+      eviction-policy: oldest-first
+      track-metadata: true
+      activity-update-threshold: 300
     cache:
       user-profile-ttl: 1800s # 30 minutes
       session-ttl: 900s # 15 minutes
       role-permissions-ttl: 3600s # 1 hour
       sync-events-ttl: 300s # 5 minutes
+      enable-statistics: false
     sync:
       enabled: true
       batch-size: 100
@@ -123,15 +190,87 @@ traveloka:
         success-retention-days: 7
         failed-retention-days: 30
     security:
+      lockout:
+        max-failed-attempts: 5
+        lockout-duration-minutes: 30
+        reset-on-success: true
+      password:
+        min-length: 8
+        require-uppercase: true
+        require-lowercase: true
+        require-digit: true
+        require-special: true
+        special-characters: "@$!%*?&#"
+        history-count: 5
+        expiry-days: 0
       cors:
         allowed-origins: "http://localhost:3000,http://localhost:3001"
         allowed-methods: "GET,POST,PUT,DELETE,OPTIONS"
         allowed-headers: "*"
         allow-credentials: true
       rate-limiting:
+        enabled: true
         auth-requests-per-minute: 10
         profile-requests-per-minute: 30
         session-requests-per-minute: 20
+        two-factor-requests-per-minute: 5
+        password-reset-requests-per-hour: 3
+        email-verification-requests-per-hour: 5
+#      email:
+#        enabled: true
+#        from:
+#        from-name: Traveloka
+#        template-path: classpath:/email-templates/
+#        verification:
+#          token-expiration-hour: 72
+#          subject: "Verify your Traveloka account"
+#          verification-url: http://localhost:3000/verify-email?token=
+#        password-reset:
+#          token-expiration-hour: 24
+#          subject: "Reset your Traveloka password"
+#          reset-url: http://localhost:3000/reset-password?token=
+#        welcome:
+#          enabled: true
+#          subject: "Welcome to Traveloka"
+#        lockout:
+#          enabled: true
+#          subject: "Your Traveloka account has been locked"
+        two-factor:
+          enabled: true
+          totp:
+            issuer: Traveloka
+            window: 1
+            time-step: 30
+          backup-codes:
+            count: 10
+            length: 8
+          email-2fa:
+            enabled: false
+            code-expiration-minutes: 10
+        oauth:
+          frontend-url: ${OAUTH_FRONTEND_URL:http://localhost:3000}
+          state-token-expiry-minutes: 10
+          providers:
+            google:
+              enabled: true
+              client-id: ${GOOGLE_CLIENT_ID:}
+              client-secret: ${GOOGLE_CLIENT_SECRET:}
+              scopes: "openid,profile,email"
+            facebook:
+              enabled: true
+              client-id: ${FACEBOOK_CLIENT_ID:}
+              client-secret: ${FACEBOOK_CLIENT_SECRET:}
+              scopes: "public_profile,email"
+            apple:
+              enabled: false
+              client-id: ${APPLE_CLIENT_ID:}
+              team-id: ${APPLE_TEAM_ID:}
+              key-id: ${APPLE_KEY_ID:}
+              private-key: ${APPLE_PRIVATE_KEY:}
+        monitoring:
+          metrics-enabled: true
+          log-auth-attempts: true
+          log-security-events: true
   performance:
     database:
       query-timeout: 30000
@@ -139,4 +278,17 @@ traveloka:
     cache:
       default-ttl: 1800
       max-entries: 10000
+
+# Resilience4j Configuration (T084 - Keycloak Retry)
+resilience4j:
+  retry:
+    instances:
+      keycloak:
+        max-attempts: ${KEYCLOAK_RETRY_MAX_ATTEMPTS:3}
+        wait-duration: ${KEYCLOAK_RETRY_WAIT_DURATION:1s}
+        exponential-backoff-multiplier: ${KEYCLOAK_RETRY_BACKOFF_MULTIPLIER:2}
+        retry-exceptions:
+          - jakarta.ws.rs.ClientErrorException
+          - java.net.ConnectException
+          - java.net.SocketTimeoutException
 

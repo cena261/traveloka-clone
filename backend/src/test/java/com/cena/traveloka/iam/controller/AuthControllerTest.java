@@ -17,8 +17,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -62,8 +62,11 @@ class AuthControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @MockitoBean
     private AuthenticationService authenticationService;
+
+    @MockitoBean
+    private com.cena.traveloka.iam.service.SessionService sessionService;
 
     private RegisterRequest validRegisterRequest;
     private LoginRequest validLoginRequest;
@@ -126,7 +129,7 @@ class AuthControllerTest {
         void shouldRegisterNewUser_Success() throws Exception {
             // Given
             when(authenticationService.register(any(RegisterRequest.class)))
-                    .thenReturn(authResponse);
+                    .thenReturn(authResponse.getUser());
 
             // When & Then
             mockMvc.perform(post("/api/v1/auth/register")
@@ -216,7 +219,7 @@ class AuthControllerTest {
         @DisplayName("Should login successfully with valid credentials")
         void shouldLogin_Success() throws Exception {
             // Given
-            when(authenticationService.login(any(LoginRequest.class)))
+            when(authenticationService.login(any(LoginRequest.class), anyString(), anyString()))
                     .thenReturn(authResponse);
 
             // When & Then
@@ -228,7 +231,7 @@ class AuthControllerTest {
                     .andExpect(jsonPath("$.data.accessToken").value("jwt-access-token"))
                     .andExpect(jsonPath("$.data.tokenType").value("Bearer"));
 
-            verify(authenticationService).login(any(LoginRequest.class));
+            verify(authenticationService).login(any(LoginRequest.class), anyString(), anyString());
         }
 
         @Test
@@ -275,7 +278,7 @@ class AuthControllerTest {
         void shouldLogin_With2FACode() throws Exception {
             // Given
             validLoginRequest.setTwoFactorCode("123456");
-            when(authenticationService.login(any(LoginRequest.class)))
+            when(authenticationService.login(any(LoginRequest.class), anyString(), anyString()))
                     .thenReturn(authResponse);
 
             // When & Then
@@ -285,7 +288,7 @@ class AuthControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.status").value("SUCCESS"));
 
-            verify(authenticationService).login(any(LoginRequest.class));
+            verify(authenticationService).login(any(LoginRequest.class), anyString(), anyString());
         }
     }
 
@@ -297,7 +300,8 @@ class AuthControllerTest {
         @DisplayName("Should logout successfully")
         void shouldLogout_Success() throws Exception {
             // Given
-            doNothing().when(authenticationService).logout(anyString());
+            // Note: logout is handled by SessionService
+            doNothing().when(sessionService).terminateSessionByToken(anyString());
 
             // When & Then
             mockMvc.perform(post("/api/v1/auth/logout")
@@ -306,7 +310,7 @@ class AuthControllerTest {
                     .andExpect(jsonPath("$.status").value("SUCCESS"))
                     .andExpect(jsonPath("$.message").exists());
 
-            verify(authenticationService).logout(anyString());
+            verify(sessionService).terminateSessionByToken(anyString());
         }
     }
 
@@ -318,7 +322,7 @@ class AuthControllerTest {
         @DisplayName("Should refresh token successfully with valid refresh token")
         void shouldRefreshToken_Success() throws Exception {
             // Given
-            when(authenticationService.refreshToken(any(RefreshTokenRequest.class)))
+            when(authenticationService.refreshToken(String.valueOf(any(RefreshTokenRequest.class))))
                     .thenReturn(authResponse);
 
             // When & Then
@@ -330,7 +334,7 @@ class AuthControllerTest {
                     .andExpect(jsonPath("$.data.accessToken").value("jwt-access-token"))
                     .andExpect(jsonPath("$.data.refreshToken").value("jwt-refresh-token"));
 
-            verify(authenticationService).refreshToken(any(RefreshTokenRequest.class));
+            verify(authenticationService).refreshToken(String.valueOf(any(RefreshTokenRequest.class)));
         }
 
         @Test
@@ -400,38 +404,36 @@ class AuthControllerTest {
     class ResetPasswordTests {
 
         @Test
-        @DisplayName("Should reset password successfully with valid token")
-        void shouldResetPassword_Success() throws Exception {
+        @DisplayName("Should request password reset successfully with valid email")
+        void shouldRequestPasswordReset_Success() throws Exception {
             // Given
             PasswordResetRequest resetRequest = PasswordResetRequest.builder()
-                    .token("valid-reset-token")
-                    .newPassword("NewTest@1234")
+                    .email("test@example.com")
                     .build();
 
-            doNothing().when(authenticationService).resetPassword(any(PasswordResetRequest.class));
+            doNothing().when(authenticationService).forgotPassword(any(PasswordResetRequest.class));
 
             // When & Then
-            mockMvc.perform(post("/api/v1/auth/reset-password")
+            mockMvc.perform(post("/api/v1/auth/forgot-password")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(resetRequest)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.status").value("SUCCESS"))
                     .andExpect(jsonPath("$.message").exists());
 
-            verify(authenticationService).resetPassword(any(PasswordResetRequest.class));
+            verify(authenticationService).forgotPassword(any(PasswordResetRequest.class));
         }
 
         @Test
-        @DisplayName("Should fail reset password when token is blank")
-        void shouldFailResetPassword_WhenTokenBlank() throws Exception {
+        @DisplayName("Should fail password reset request when email is blank")
+        void shouldFailPasswordResetRequest_WhenEmailBlank() throws Exception {
             // Given
             PasswordResetRequest resetRequest = PasswordResetRequest.builder()
-                    .token("")
-                    .newPassword("NewTest@1234")
+                    .email("")
                     .build();
 
             // When & Then
-            mockMvc.perform(post("/api/v1/auth/reset-password")
+            mockMvc.perform(post("/api/v1/auth/forgot-password")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(resetRequest)))
                     .andExpect(status().isBadRequest());
